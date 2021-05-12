@@ -2,13 +2,10 @@ import numpy as np
 import pandas as pd
 # https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html#sklearn.feature_extraction.text.CountVectorizer
 from sklearn.feature_extraction.text import CountVectorizer # used to extract term frequency for each document
-# https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html#sklearn.feature_extraction.text.TfidfTransformer
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.pipeline import Pipeline
+# https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html#sklearn.feature_extraction.text.TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 BC3_PICKLE_LOC  = "./data/dataframes/wrangled_BC3_df.pkl"
-# Find the n most common words in the document
 
 """
 Function to determine what words are the most frequent across the document, and use those for the feature vector
