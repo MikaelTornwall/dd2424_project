@@ -157,8 +157,8 @@ def clean_email_df(df):
     df = df.replace('',np.NaN)
     df = df.dropna(subset=['body'])
 
-    #Remove all Duplicate emails 
-    #df = df.drop_duplicates(subset='body')
+    #Remove all Duplicate emails (mentioned in the article!)
+    df = df.drop_duplicates(subset='body')
     return df
 
 """
@@ -219,7 +219,12 @@ bc3_df = clean_email_df(bc3_df)
 # TODO: check if we actually want to remove stop words! Seems like a good idea to get the vector sizes down though..
 bc3_df['extractive_sentences'] = bc3_df['body'].apply(sent_tokenize)
 bc3_df['tokenized_body'] = bc3_df['body'].apply(tokenize_email)
+# remove duplicate in the tokenized text
+bc3_df = bc3_df.loc[bc3_df.astype(str).drop_duplicates(subset='tokenized_body').index]
 print(bc3_df.head())
+
+# TODO: in the article it says they remove signatures and sender's names in the preprocessing. I think that is taken care of
+# as everything is divided in to sections in the pandas. 
 
 """ 
 STEP 3: Store data
