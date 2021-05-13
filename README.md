@@ -19,6 +19,7 @@ Or other ways to install the necessary dependencies.
 
 For the nltk modules to work data need to be doenloaded and stored. Run
 ```bash
+nltk.download('punkt')
 nltk.download('stopwords')
 ```
 Further instructions and information will be provided in the terminal when running the bc3_parser file.
