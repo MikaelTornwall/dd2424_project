@@ -79,6 +79,7 @@ def tf_idf_vecs_for_all():
     tfidf = v.fit_transform(all_sents)
     return pd.DataFrame(tfidf)
 
+# TODO: add this data directly to the pandas datastructure..
 n_features = 10
 doc_tf = compute_tf_for_docs(n_features)
 print(doc_tf)
