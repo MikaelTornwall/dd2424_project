@@ -1,5 +1,8 @@
+# for data 
 numpy
 pandas
 talon==1.4.4
 scikit-learn==0.22 # talon uses part of scikit learn that is deprecated >= 0.23..
 nltk==3.6.1
+
+torch==1.8.1
