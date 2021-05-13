@@ -37,12 +37,11 @@ Function that computes the term frequency for each of the sentences in each of t
 Parameter: The number of features to use in the vector representation
 Returns: Dictionary with dictionary index as key and term frequency matrix as value
 """
-def compute_tf_for_docs(n_features):
+def compute_tf_for_docs(df, n_features):
     # read and parse the data
-    bc3_df = pd.read_pickle(BC3_PICKLE_LOC)
+    bc3_df = df
     docs = bc3_df['tokenized_body'].tolist()
-    print('docs 0: ', docs[2])
-    # data structure to hold the term frequencies for each document (the key is document row in the panda)
+    # data structure to hold the term frequencies for each document
     doc_tfs = []
 
     for idx, d in enumerate(docs):
@@ -56,10 +55,11 @@ def compute_tf_for_docs(n_features):
             # Adding small values to the feature vectors
             scores = np.random.normal(0, 1e-8, (X.shape))
             scores = scores + X
-            doc_tfs.append({"id": idx, "tf": scores })
-    
-    # TODO: return in pandas format
-    return pd.DataFrame(doc_tfs)
+            doc_tfs.append(scores)
+        else: # append empty to be able to merge with bc3 data
+            doc_tfs.append([])
+
+    return doc_tfs
 
 """
 Function that creates the tf_idf vector representations for each of the sentences in the corpus.
@@ -79,10 +79,11 @@ def tf_idf_vecs_for_all():
     tfidf = v.fit_transform(all_sents)
     return pd.DataFrame(tfidf)
 
-# TODO: add this data directly to the pandas datastructure..
-n_features = 10
-doc_tf = compute_tf_for_docs(n_features)
-print(doc_tf)
-
-corpus_tf_idf = tf_idf_vecs_for_all()
-print(corpus_tf_idf)
+""" 
+function to be called to return modified dataframe, including sentence vectors!
+param: number of features in the vector
+"""
+def compute_and_add_tf_to_dataframe(df, n_features):
+    doc_tf = compute_tf_for_docs(df, n_features)
+    df['df_vectors'] = doc_tf
+    return df

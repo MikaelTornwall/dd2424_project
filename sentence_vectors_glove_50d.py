@@ -6,7 +6,7 @@ Source code at: https://github.com/dailykirt/ML_Enron_email_summary/blob/master/
 import pandas as pd
 import numpy as np
 
-# load the processed text
+# load the processed text, if function is not called fro sentence_vectors.py
 BC3_PICKLE_LOC  = "./data/dataframes/wrangled_BC3_df.pkl"
 BC3_df = pd.read_pickle(BC3_PICKLE_LOC)
 
@@ -48,27 +48,24 @@ def create_sentence_vectors(clean_sentences, word_embeddings):
 
 ''' Looks through all the parsed data and creates sentence vectors for each data object
 Adds a column with the sentence vectors to the data frame! '''
-def create_sentence_vectors_for_all():
+def create_sentence_vectors_for_all(word_embeddings, df):
     all_sentence_vectors = []
-    for index, row in BC3_df.iterrows():
+    for index, row in df.iterrows():
         data = pd.DataFrame([row])
         data['body'].iloc[0]
         clean_sentences = get_tokenized_sentences(data)
         sentence_vectors = create_sentence_vectors(clean_sentences, word_embeddings)
         all_sentence_vectors.append(sentence_vectors)
 
-    BC3_df['sentence_vectors'] = all_sentence_vectors
+    df['sentence_vectors'] = all_sentence_vectors
 
-    return BC3_df
+    return df
 
 """
 Update the pandas to include sentence vectors for each email object
+Parameter: dataframe object
 """
-word_embeddings = extract_word_vectors()
-BC3_df_with_vectors = create_sentence_vectors_for_all()
-
-""" 
-Store the pandas including the sentence vectors
-"""
-BC3_PICKLE_LOC  = "./data/dataframes/BC3_df_with_sentence_vectors.pkl"
-BC3_df_with_vectors.to_pickle(BC3_PICKLE_LOC)
+def compute_and_add_glove_to_dataframe(df):
+    word_embeddings = extract_word_vectors()
+    BC3_df_with_vectors = create_sentence_vectors_for_all(word_embeddings, df)
+    return BC3_df_with_vectors
