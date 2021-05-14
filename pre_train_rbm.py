@@ -17,12 +17,15 @@ class RBM():
         self.a = torch.randn(1, n_hidden)
         self.b = torch.randn(1, n_visible)
 
+    # This corresponds to eqn 3 in the paper!
     def sample_h(self, x):
         wx = torch.mm(x, self.W.t())
         activation = wx + self.a.expand_as(wx)
         p_h_given_v = torch.sigmoid(activation)
         return p_h_given_v, torch.bernoulli(p_h_given_v)
 
+    # this corresponds to eqn 4 in the paper!
+    # TODO: update this to be Gaussian-Bernoulli for the first layer (now its Bernoulli-Bernoulli)
     def sample_v(self, y):
         wy = torch.mm(y, self.W)
         activation = wy + self.b.expand_as(wy)
@@ -34,6 +37,7 @@ class RBM():
     vk: visible nodes obtained after k samplings
     ph0: the vector of probabilities ?
     phk: probability of the hidden nodes after k samplings
+    corresponds to eqn 12 in the paper!
     """
     def train(self, v0, vk, ph0, phk):
         t_1 = torch.mm(v0.t(), ph0)
