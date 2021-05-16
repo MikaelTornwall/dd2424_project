@@ -20,13 +20,16 @@ def vectorize():
     BC3_PICKLE_LOC  = "./data/dataframes/wrangled_BC3_df.pkl"
     BC3_df = pd.read_pickle(BC3_PICKLE_LOC)
 
-    # add the glove vectors
-    bc3_glove = compute_and_add_glove_to_dataframe(BC3_df)
+    # add the glove vectors for sentences
+    bc3_glove_sents = compute_and_add_glove_to_dataframe(BC3_df)
+    # TODO: add back to add glove vectors for the summaries
+    # bc3_glove_sums = add_glove_for_summary(bc3_glove_sents)
 
     # add the normalized term frequency vectors
     n_features = 10
-    bc3_glove_tf = compute_and_add_tf_to_dataframe(bc3_glove, n_features)
+    bc3_glove_tf = compute_and_add_tf_to_dataframe(bc3_glove_sents, n_features)
     print(bc3_glove_tf)
+
     # Store the pandas including the sentence vectors
     BC3_PICKLE_LOC  = "./data/dataframes/BC3_df_with_sentence_vectors.pkl"
     bc3_glove_tf.to_pickle(BC3_PICKLE_LOC)
