@@ -46,3 +46,16 @@ python sentence_vectors.py
 ```
 
 The pandas dataframe, including the vectors will be written to the file 'BC3_df_with_sentence_vectors.pkl'.
+
+## Autoencoder
+The functionality for the autoencoder is in the autoencoder module. The autoencoder is training on all sentences in the corpus, and can then output sentence vectors based on the grove sentence vectors for a document.
+
+## Summarization
+The project includes functionality to summarize documents, based on textrank scores of the sentences in a document. Summarization functionality is located in the file summarize.py
+
+## Evaluation
+The project includes functionality to evaluate summaries created based on textrank. The summaries are scored using ROUGE. Scores are computed both on the summaries created using textrank on the original glove sentence vectors and on the glove sentence vectors returned by the autoencoder. To run the evaluation: 
+
+```bash
+python evaluate.py
+```
