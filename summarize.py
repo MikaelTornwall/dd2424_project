@@ -74,13 +74,3 @@ def display_summary(enron_masked_df, ranked_sentences):
           " Subject: " + email_subject +
           " From: " + email_from + bcolors.ENDC +
           "\nSummary: " + str(ranked_sentences[i][2]))
-
-def summarize_on_sentence_vectors(df): 
-
-    #Get the sentence vectors
-    sentence_vectors = df['sentence_vectors'].tolist()
-    sentence_vectors = np.array(sentence_vectors)
-    #Create a list of ranked sentences. 
-    ranked_sentences = summarize_emails(df, sentence_vectors[0])
-    # display_summary(df, ranked_sentences)
-    return ranked_sentences

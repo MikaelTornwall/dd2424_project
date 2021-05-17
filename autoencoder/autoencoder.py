@@ -1,4 +1,3 @@
-from typing import Sequence
 import torch 
 import torch.nn as nn
 import matplotlib.pyplot as plt
@@ -7,9 +6,6 @@ from autoencoder.autoencoder_class import Autoencoder
 import pandas as pd
 import numpy as np
 from torch.utils.data import DataLoader
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from summarize import *
 
 
 def get_glove_vector_data():
@@ -29,18 +25,7 @@ def get_glove_vector_data():
                 vecs = v
             else:
                 vecs = torch.cat((vecs, v), 0)
-    print(vecs.shape)
     return vecs
-
-def get_glove_query_vector_data():
-    # 1. fetch the data
-    BC3_PICKLE_LOC  = "../data/dataframes/BC3_df_sentence_summary_vectors.pkl"
-    BC3_df = pd.read_pickle(BC3_PICKLE_LOC)
-
-    # column 'subject' or 'extractive_sentences'
-    # 2. Fetch the subjects from the model
-    summary_vectors = BC3_df['subject_vector'].tolist()
-    print(BC3_df.columns)
 
 def train(net, trainloader, NUM_EPOCHS, criterion, optimizer):
     train_loss = []
@@ -86,21 +71,3 @@ def train_autoencoder():
     plt.ylabel('Loss')
     plt.savefig('deep_ae_sent_loss.png')
     return net
-
-# test the network! HOW??
-# plan: get all the queries (email titles)
-# run the autoendoder on the sentences in the doc and query
-# get the cosine distance between and return the best matching sentences (based on the x_hat vectors)
-
-# get_glove_query_vector_data()
-def summarize_autoencoder(df, net):
-    # print('retrieving autoencoder sentences..')
-    sentence_vectors = df['sentence_vectors'].tolist()
-    torch_vectors = torch.tensor(sentence_vectors[0], dtype=torch.float32)
-    output_vectors = net(torch_vectors)
-    #Create a list of ranked sentences. 
-    ranked_sentences = summarize_emails(df, output_vectors, True)
-    # display_summary(df, ranked_sentences)
-    return ranked_sentences
-
-# summarize_autoencoder()
