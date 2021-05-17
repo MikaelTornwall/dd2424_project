@@ -8,13 +8,10 @@ import numpy as np
 from torch.utils.data import DataLoader
 
 
-def get_glove_vector_data():
-    # 1. fetch the data
-    BC3_PICKLE_LOC  = "./data/dataframes/BC3_df_with_sentence_vectors.pkl"
-    BC3_df = pd.read_pickle(BC3_PICKLE_LOC)
+def get_glove_vector_data(df):
 
     # 2. Fetch the glove sentence vectors from the model
-    training_documents = BC3_df['sentence_vectors'].tolist()
+    training_documents = df['sentence_vectors'].tolist()
 
     # 3. Create one datastructure holding all the sentence vectors
     vecs = None
@@ -49,8 +46,8 @@ NUM_EPOCHS = 50
 LEARNING_RATE = 1e-3
 BATCH_SIZE = 100
 
-def train_autoencoder():
-    sentence_vectors = get_glove_vector_data()
+def train_autoencoder(df):
+    sentence_vectors = get_glove_vector_data(df)
     trainloader = DataLoader(
         sentence_vectors, 
         batch_size=BATCH_SIZE,
