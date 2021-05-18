@@ -108,6 +108,7 @@ class DecoderRNN(nn.Module):
 
 class AttnDecoderRNN(nn.Module):
     def __init__(self, hidden_size, output_size, dropout_p=0.1, max_length=config.MAX_LENGTH):
+        super(AttnDecoderRNN, self).__init__()
         self.hidden_size = hidden_size
         self.output_size = output_size
         self.dropout_p = dropout_p

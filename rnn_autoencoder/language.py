@@ -3,8 +3,6 @@ import numpy as np
 import torch
 import config
 
-SOS_token = 0
-EOS_token = 1
 
 class Language:
     """
@@ -111,11 +109,11 @@ def tensor_from_text(language, text):
             Tensor containing the the list of indices and EOS token
     """
     indices = indices_from_text(language, text)
-    indices.append(EOS_token)
+    indices.append(config.EOS_TOKEN)
     return torch.tensor(indices, dtype=torch.long, device=config.DEVICE).view(-1, 1)
     
 
-def tensor_from_pair(input_language, target_language, pair):
+def tensors_from_pair(input_language, target_language, pair):
     """
         Function takes a pair of text body and its summary and generates index tensors for each by utilizing tensor_from_text function
 
