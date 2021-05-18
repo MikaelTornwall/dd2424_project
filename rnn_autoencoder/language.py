@@ -47,6 +47,23 @@ class Language:
 
 def read_languages(body, summary):
     """
+        Takes two text corpora, the original text body and its summary and creates empty languages representations for both and corresponding body-summary pairs
+    
+        Parameters
+        ----------
+        list : body
+            List of text bodies
+        list : summary
+            List of text summaries
+
+        Returns
+        ----------
+            class 
+                Returns an empty class instance created for text bodies
+            class
+                Returns an empty class instance created for summaries
+            list
+                Returns a list containing tuples, where in index 0 is the original text body and in index 1 its corresponding summary
     """
     print('Reading lines')
     pairs = [[body[i], summary[i]] for i in range(len(body))]
@@ -57,10 +74,28 @@ def read_languages(body, summary):
     return input_language, output_language, pairs
 
 
-def prepare_data(language_1, language_2):
+def prepare_data(body, summary):
     """
+        Takes two text corpora, the original text body and its summary and creates languages representations for both 
+        and the body-summary pairs. Then both language instaces are filled with words.
+
+        Parameters
+        ----------
+            list : body
+            List of text bodies
+        list : summary
+            List of text summaries
+
+        Returns
+        ----------
+            class
+                Returns initialized class instance created from text bodies
+            class
+                Returns initialized class instance created from summaries
+            list
+                Returns a list containing tuples, where in index 0 is the original text body and in index 1 its corresponding summary
     """
-    input_language, output_language, pairs = read_languages(language_1, language_2)
+    input_language, output_language, pairs = read_languages(body, summary)
 
     print(f'Reading {len(pairs)} sentence pairs...')
     print('Counting words')
@@ -90,6 +125,7 @@ def indices_from_text(language, text):
             Returning list contains index of each word in the input text as it appears in the language
     """
     return [language.word2index[word] for word in text.split(' ')]
+
 
 def tensor_from_text(language, text):
     """

@@ -1,3 +1,12 @@
+"""
+    Inspiration 
+    from
+    https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html
+    and 
+    https://www.kaggle.com/rahuldshetty/text-summarization-in-pytorch/comments
+"""
+
+
 from __future__ import unicode_literals, print_function, division
 from functools import cmp_to_key
 from io import open
@@ -16,15 +25,6 @@ import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
 import torch.optim as optim
-
-
-"""
-    Inspiration 
-    from
-    https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html
-    and 
-    https://www.kaggle.com/rahuldshetty/text-summarization-in-pytorch/comments
-"""
 
 
 def remove_stopwords(sen):
@@ -114,10 +114,12 @@ class AttnDecoderRNN(nn.Module):
         self.dropout_p = dropout_p
         self.max_length = max_length
 
+        # Look up table for word vectors
         self.embedding = nn.Embedding(self.output_size, self.hidden_size)
         self.attn = nn.Linear(self.hidden_size * 2, self.max_length)
         self.attn_combine = nn.Linear(self.hidden_size * 2, self.hidden_size)
         self.dropout = nn.Dropout(self.dropout_p)
+        # Multilayer gated recurrent unit 
         self.gru = nn.GRU(self.hidden_size, self.hidden_size)
         self.out = nn.Linear(self.hidden_size, self.output_size)
 

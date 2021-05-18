@@ -1,3 +1,12 @@
+"""
+    Inspiration 
+    from
+    https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html
+    and 
+    https://www.kaggle.com/rahuldshetty/text-summarization-in-pytorch/comments
+"""
+
+
 from os import device_encoding
 import random
 import pandas as pd
@@ -161,7 +170,8 @@ def main():
     encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
     attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
 
-    train_iterations(input_language, output_language, pairs, encoder, attn_decoder, 5000, print_every=100)
+    n_iterations = 75000
+    train_iterations(input_language, output_language, pairs, encoder, attn_decoder, n_iterations, print_every=100)
     evaluate_randomly(input_language, output_language, pairs, encoder, attn_decoder)
 
 
