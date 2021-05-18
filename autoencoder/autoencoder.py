@@ -61,10 +61,13 @@ def train_autoencoder(df):
     # train the network
     print('training network..')
     train_loss = train(net, trainloader, NUM_EPOCHS, criterion, optimizer)
+    """ 
+    Include to plot the trianing loss! 
     plt.figure()
     plt.plot(train_loss)
     plt.title('Train Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.savefig('deep_ae_sent_loss.png')
+    """
     return net

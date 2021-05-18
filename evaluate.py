@@ -29,10 +29,12 @@ def summarize_autoencoder_vectors(df, net):
     # display_summary(df, ranked_sentences)
     return ranked_sentences
 
-def evaluate_rankings(df_train, df_test, target, sum_len):
+def evaluate_rankings(df_train, df_test, target, sum_len, corpus_ae=True):
     evaluator = rouge.Rouge() 
     #create and train the autoencoder (see autoencoder module)
-    net = train_autoencoder(df_train)
+    net = None
+    if corpus_ae:
+        net = train_autoencoder(df_train)
 
     # loop through all docs in the corpus
     print('evaluating summaries..')
@@ -44,6 +46,9 @@ def evaluate_rankings(df_train, df_test, target, sum_len):
         print('iteration: ', index)
         df_c = pd.DataFrame([row])
         df_c['body'].iloc[0]
+        # train AE on the current document only
+        if not corpus_ae:
+            net = train_autoencoder(df_c)
         reference = df_c[target].iloc[0] # reference that we score against (could be summary or subject)!
         print('reference: ', reference)
         # get the ranked sentences for the original and the ae modified sentence vectors
@@ -115,16 +120,17 @@ def evaluate_bc3():
 
 def evaluate_spotify():
     SPOTIFY_PICKLE_TRAIN_LOC  = "./data/dataframes/spotify_train_vectors.pkl"
-    SPOTIFY_PICKLE_TEST_LOC  = "./data/dataframes/spotify_test_vectors.pkl" 
+    SPOTIFY_PICKLE_TEST_LOC  = "./data/dataframes/spotify_test_vectors_10.pkl" 
     df_train = pd.read_pickle(SPOTIFY_PICKLE_TRAIN_LOC)
     df_test = pd.read_pickle(SPOTIFY_PICKLE_TEST_LOC)
     
     # evaluate on 'summary' or 'subject'
     target = 'episode_desc'
-    summary_len = 4
+    summary_len = 3
+    corpus_ae = False
     # target = 'subject'
     # summary_len = 1
-    sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len)
+    sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae)
     analyze_and_plot_rouge_scores(sum_scores, ae_sum_scores)
 
 evaluate_spotify()
