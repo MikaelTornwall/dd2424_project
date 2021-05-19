@@ -5,7 +5,7 @@ import numpy as np
 
 """
 Calls functions to create sentence vectors for the provided dataframe. adds column to the existing dataframe.
-Sentence vectors based on glove 
+Sentence vectors based on glove and term frequency.
 """
 def vectorize():
     # load the parsed data
@@ -18,7 +18,7 @@ def vectorize():
     spotify_glove_sents_train = compute_and_add_glove_to_dataframe(spotify_df_train)
     spotify_glove_sents_test = compute_and_add_glove_to_dataframe(spotify_df_test)
 
-    # add normalized df vectors for sentences (these will be document specific!)
+    # add normalized tf vectors for sentences (these will be document specific!)
     n_features = 50
     spotify_df_sents_train = compute_and_add_tf_to_dataframe(spotify_glove_sents_train, n_features)
     spotify_df_sents_test = compute_and_add_tf_to_dataframe(spotify_glove_sents_test, n_features)
