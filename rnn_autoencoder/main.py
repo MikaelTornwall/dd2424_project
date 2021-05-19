@@ -1,9 +1,7 @@
 """
     Inspiration 
     from
-    https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html
-    and 
-    https://www.kaggle.com/rahuldshetty/text-summarization-in-pytorch/comments
+    https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html    
 """
 
 
@@ -109,6 +107,7 @@ def train_iterations(input_language, output_language, pairs, encoder, decoder, n
 
     # show_plot(plot_losses)
 
+
 def evaluate(input_language, output_language, encoder, decoder, text, max_length=config.MAX_LENGTH):
     with torch.no_grad():
         input_tensor = tensor_from_text(input_language, text)
@@ -155,14 +154,29 @@ def evaluate_randomly(input_language, output_language, pairs, encoder, decoder, 
 
 
 def main():
-    data = pd.read_pickle(r'../data/dataframes/wrangled_BC3_df.pkl')
-    print(data.info())
-    X = data['body']
-    Y = data['summary']
-
-    clean_body = clean_text(X)
-    clean_summary = clean_text(Y)
-    input_language, output_language, pairs = prepare_data(clean_body, clean_summary)
+    training_data = pd.read_pickle(r'../data/dataframes/spotify_train_vectors.pkl')
+    test_data = pd.read_pickle(r'../data/dataframes/spotify_test_vectors.pkl')
+    print(training_data.info())    
+    print(test_data.info())    
+    
+    X_train, Y_train = training_data['body'], training_data['episode_desc']
+    X_test, Y_test = test_data['body'], test_data['episode_desc']
+    
+    clean_body_train, clean_summary_train = clean_text(X_train), clean_text(Y_train)
+    clean_body_test, clean_body_summary = clean_text(X_test), clean_text(Y_test)
+    
+    # print('Transcription')
+    # print(clean_body[0])
+    # print('Summary')
+    # print(clean_summary[0])
+    
+    input_language, output_language, pairs_train = prepare_data(clean_body_train, clean_summary_train)
+    
+    pairs_test = [[clean_body_test[i], clean_body_summary[i]] for i in range(len(clean_body_test))]
+    
+    for pair in pairs_test:
+        input_language.add_sentence(pair[0])
+        output_language.add_sentence(pair[1])
 
     # input_tensor, target_tensor = tensors_from_pair(input_language, output_language, pairs[0])
     
@@ -170,10 +184,35 @@ def main():
     encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
     attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
 
-    n_iterations = 75000
-    train_iterations(input_language, output_language, pairs, encoder, attn_decoder, n_iterations, print_every=100)
-    evaluate_randomly(input_language, output_language, pairs, encoder, attn_decoder)
+    n_iterations = 500
+    train_iterations(input_language, output_language, pairs_train, encoder, attn_decoder, n_iterations, print_every=100)
+    evaluate_randomly(input_language, output_language, pairs_test, encoder, attn_decoder)
 
 
 if __name__ == '__main__':
     main()
+
+"""
+    BC3 main
+
+    def main():
+        data = pd.read_pickle(r'../data/dataframes/wrangled_BC3_df.pkl')
+        print(data.info())
+        X = data['body']
+        Y = data['summary']
+
+        clean_body = clean_text(X)
+        clean_summary = clean_text(Y)
+        input_language, output_language, pairs = prepare_data(clean_body, clean_summary)
+
+        # input_tensor, target_tensor = tensors_from_pair(input_language, output_language, pairs[0])
+        
+        hidden_size = 256
+        encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
+        attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
+
+        n_iterations = 75000
+        train_iterations(input_language, output_language, pairs, encoder, attn_decoder, n_iterations, print_every=100)
+        evaluate_randomly(input_language, output_language, pairs, encoder, attn_decoder)
+
+"""
