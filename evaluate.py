@@ -171,11 +171,11 @@ def evaluate_spotify():
 
     sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae, vector_set)
     # plot F scores:
-    analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'Spotify dataset')
+    # analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'Spotify dataset')
     # plot precision
-    analyze_and_plot_rouge_scores(sum_scores[1], ae_sum_scores[1], 'precision', 'Spotify dataset')
+    # analyze_and_plot_rouge_scores(sum_scores[1], ae_sum_scores[1], 'precision', 'Spotify dataset')
     # plot recall
-    analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
+    # analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
 
 evaluate_spotify()
 # evaluate_bc3()

@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import torch.optim as optim
-from autoencoder.autoencoder_class import Autoencoder
+from autoencoder.autoencoder_class import Autoencoder, DAE
+from autoencoder.rbm.pre_training import *
 import pandas as pd
 import numpy as np
 from torch.utils.data import DataLoader
@@ -53,21 +54,23 @@ def train_autoencoder(df, vector_set):
         batch_size=BATCH_SIZE,
         shuffle=True
     )
-
-    net = Autoencoder()
+    rbm_models = train_rbm_model_parameters(df, vector_set)
+    net = DAE(rbm_models)
+    # net = Autoencoder()
     criterion = nn.MSELoss()
     optimizer = optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
     # train the network
     print('training network..')
     train_loss = train(net, trainloader, NUM_EPOCHS, criterion, optimizer)
-    """ 
-    Include to plot the trianing loss! 
+    
+    # Include to plot the trianing loss! 
     plt.figure()
     plt.plot(train_loss)
     plt.title('Train Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
+    plt.show()
     plt.savefig('deep_ae_sent_loss.png')
-    """
+    
     return net
