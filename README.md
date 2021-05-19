@@ -50,6 +50,8 @@ The pandas dataframe, including the vectors will be written to the file 'BC3_df_
 ## Autoencoder
 The functionality for the autoencoder is in the autoencoder module. The autoencoder is training on all sentences in the corpus, and can then output sentence vectors based on the grove sentence vectors for a document.
 
+## Sequence2Sequence network
+
 ## Summarization
 The project includes functionality to summarize documents, based on textrank scores of the sentences in a document. Summarization functionality is located in the file summarize.py
 

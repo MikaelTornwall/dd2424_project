@@ -1,7 +1,7 @@
 import torch
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-MAX_LENGTH = 10000
+MAX_LENGTH = 1000
 SOS_TOKEN = 0
 EOS_TOKEN = 1
 

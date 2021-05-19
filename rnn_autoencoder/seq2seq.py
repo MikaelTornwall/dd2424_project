@@ -2,8 +2,6 @@
     Inspiration 
     from
     https://pytorch.org/tutorials/intermediate/seq2seq_translation_tutorial.html
-    and 
-    https://www.kaggle.com/rahuldshetty/text-summarization-in-pytorch/comments
 """
 
 
@@ -25,6 +23,7 @@ import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
 import torch.optim as optim
+# from project.bc3_parser import remove_stopwords
 
 
 def remove_stopwords(sen):
