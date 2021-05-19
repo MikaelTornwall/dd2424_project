@@ -8,10 +8,10 @@ import numpy as np
 from torch.utils.data import DataLoader
 
 
-def get_glove_vector_data(df):
+def get_glove_vector_data(df, vector_set):
 
     # 2. Fetch the glove sentence vectors from the model
-    training_documents = df['sentence_vectors'].tolist()
+    training_documents = df[vector_set].tolist()
 
     # 3. Create one datastructure holding all the sentence vectors
     vecs = None
@@ -46,8 +46,8 @@ NUM_EPOCHS = 50
 LEARNING_RATE = 1e-3
 BATCH_SIZE = 100
 
-def train_autoencoder(df):
-    sentence_vectors = get_glove_vector_data(df)
+def train_autoencoder(df, vector_set):
+    sentence_vectors = get_glove_vector_data(df, vector_set)
     trainloader = DataLoader(
         sentence_vectors, 
         batch_size=BATCH_SIZE,

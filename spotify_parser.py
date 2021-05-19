@@ -79,7 +79,7 @@ for file in files:
                 'pod_name': ep_metadata['pod_name'],
                 'pod_desc': ep_metadata['pod_desc'],
             }
-            if num_files % 10 == 0:
+            if num_files % 50 == 0:
                 test_data.append(episode_object)
             else:
                 training_data.append(episode_object)

@@ -26,7 +26,7 @@ def vectorize():
     # bc3_glove_sums = add_glove_for_summary(bc3_glove_sents)
 
     # add the normalized term frequency vectors
-    n_features = 10
+    n_features = 50
     bc3_glove_tf = compute_and_add_tf_to_dataframe(bc3_glove_sents, n_features)
     print(bc3_glove_tf)
 

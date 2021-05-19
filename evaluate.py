@@ -1,3 +1,4 @@
+from pandas.core.base import SelectionMixin
 from summarize import *
 from autoencoder.autoencoder import *
 from summarize import *
@@ -7,9 +8,9 @@ import rouge
 """
 Using textrank to extract the highest scoring sentences in the vector data
 """
-def summarize_sentence_vectors(df):
-    print('summarizing sentence vectors..') 
-    sentence_vectors = df['sentence_vectors'].tolist()
+def summarize_sentence_vectors(df, vector_set):
+    print('summarizing sentence vectors..')
+    sentence_vectors = df[vector_set].tolist()
     sentence_vectors = np.array(sentence_vectors)
     #Create a list of ranked sentences. 
     ranked_sentences = summarize_emails(df, sentence_vectors[0])
@@ -19,9 +20,9 @@ def summarize_sentence_vectors(df):
 """
 Using textrank to extract the highest scoring sentences in the vectors created by the autoencoder
 """
-def summarize_autoencoder_vectors(df, net):
+def summarize_autoencoder_vectors(df, net, vector_set):
     print('summarizing autoencoder sentence vectors..') 
-    sentence_vectors = df['sentence_vectors'].tolist()
+    sentence_vectors = df[vector_set].tolist()
     torch_vectors = torch.tensor(sentence_vectors[0], dtype=torch.float32)
     output_vectors = net(torch_vectors)
     #Create a list of ranked sentences. 
@@ -29,12 +30,12 @@ def summarize_autoencoder_vectors(df, net):
     # display_summary(df, ranked_sentences)
     return ranked_sentences
 
-def evaluate_rankings(df_train, df_test, target, sum_len, corpus_ae=True):
+def evaluate_rankings(df_train, df_test, target, sum_len, corpus_ae=True, vector_set='sentence_vectors'):
     evaluator = rouge.Rouge() 
     #create and train the autoencoder (see autoencoder module)
     net = None
     if corpus_ae:
-        net = train_autoencoder(df_train)
+        net = train_autoencoder(df_train, vector_set)
 
     # loop through all docs in the corpus
     print('evaluating summaries..')
@@ -46,40 +47,42 @@ def evaluate_rankings(df_train, df_test, target, sum_len, corpus_ae=True):
         print('iteration: ', index)
         df_c = pd.DataFrame([row])
         df_c['body'].iloc[0]
-        # train AE on the current document only
-        if not corpus_ae:
-            net = train_autoencoder(df_c)
-        reference = df_c[target].iloc[0] # reference that we score against (could be summary or subject)!
-        print('reference: ', reference)
-        # get the ranked sentences for the original and the ae modified sentence vectors
-        ranked_sentences = summarize_sentence_vectors(df_c)
-        ranked_ae_sentences = summarize_autoencoder_vectors(df_c, net)
+        # Only proceed if the vectors of the current row are of correct dimensions (not [])
+        if len(df_c[vector_set].tolist()[0]) > 0:
+            # train AE on the current document only
+            if not corpus_ae :
+                net = train_autoencoder(df_c, vector_set)
+            reference = df_c[target].iloc[0] # reference that we score against (could be summary or subject)!
+            print('reference: ', reference)
+            # get the ranked sentences for the original and the ae modified sentence vectors
+            ranked_sentences = summarize_sentence_vectors(df_c, vector_set)
+            ranked_ae_sentences = summarize_autoencoder_vectors(df_c, net, vector_set)
 
-        # SUM_LEN = 2 # the number of sentences to include in the generated summary
-        if len(ranked_sentences) >= sum_len:
-            # get the top ranked sentences
-            sum = []
-            sum_ae = []
-            for i in range(sum_len):
-                sum.append(ranked_sentences[i][2])
-                sum_ae.append(ranked_ae_sentences[i][2])
+            # SUM_LEN = 2 # the number of sentences to include in the generated summary
+            if len(ranked_sentences) >= sum_len:
+                # get the top ranked sentences
+                sum = []
+                sum_ae = []
+                for i in range(sum_len):
+                    sum.append(ranked_sentences[i][2])
+                    sum_ae.append(ranked_ae_sentences[i][2])
 
-            sum_str = ' '.join(sum)
-            sum_ae_str = ' '.join(sum_ae)
-            print('summary: ', sum_str)
-            print('ae summary: ', sum_ae_str)
+                sum_str = ' '.join(sum)
+                sum_ae_str = ' '.join(sum_ae)
+                print('summary: ', sum_str)
+                print('ae summary: ', sum_ae_str)
 
-            # get the ROUGE scores for the ranked sentences and add to plot data
-            sum_score = evaluator.get_scores(sum_str, reference)
-            sum_ae_score = evaluator.get_scores(sum_ae_str, reference)
-            sum_scores[0, curr_row] = sum_score[0]['rouge-1']['f']
-            sum_scores[1, curr_row] = sum_score[0]['rouge-1']['p']
-            sum_scores[2, curr_row] = sum_score[0]['rouge-1']['r']
+                # get the ROUGE scores for the ranked sentences and add to plot data
+                sum_score = evaluator.get_scores(sum_str, reference)
+                sum_ae_score = evaluator.get_scores(sum_ae_str, reference)
+                sum_scores[0, curr_row] = sum_score[0]['rouge-1']['f']
+                sum_scores[1, curr_row] = sum_score[0]['rouge-1']['p']
+                sum_scores[2, curr_row] = sum_score[0]['rouge-1']['r']
 
-            ae_sum_scores[0, curr_row] = sum_ae_score[0]['rouge-1']['f']
-            ae_sum_scores[1, curr_row] = sum_ae_score[0]['rouge-1']['p']
-            ae_sum_scores[2, curr_row] = sum_ae_score[0]['rouge-1']['r']
-            curr_row += 1
+                ae_sum_scores[0, curr_row] = sum_ae_score[0]['rouge-1']['f']
+                ae_sum_scores[1, curr_row] = sum_ae_score[0]['rouge-1']['p']
+                ae_sum_scores[2, curr_row] = sum_ae_score[0]['rouge-1']['r']
+                curr_row += 1
     
     sum_scores = sum_scores[:, 0:curr_row]
     ae_sum_scores = ae_sum_scores[:, 0:curr_row]
@@ -87,21 +90,23 @@ def evaluate_rankings(df_train, df_test, target, sum_len, corpus_ae=True):
         
 
 # calculating averages
-def analyze_and_plot_rouge_scores(sum_scores, ae_sum_scores):
-    avg_scores = np.mean(sum_scores, axis=1)
-    avg_scores_ae = np.mean(ae_sum_scores, axis=1)
+def analyze_and_plot_rouge_scores(sum_scores, ae_sum_scores, metric, dataset_name):
+    avg_scores = np.mean(sum_scores)
+    avg_scores_ae = np.mean(ae_sum_scores)
     print('avg rouge scores: ', avg_scores)
     print('avg rouge scores ae: ', avg_scores_ae)
 
     # print the graphs for the extracted sentences
     # print('arr shape: ',sum_scores[0].tolist())
-    x = np.arange(len(sum_scores[0])).tolist()
-    # print('x', x)
-    plt.plot(x, sum_scores[0].tolist(), label = "summary, f")
-    plt.plot(x, ae_sum_scores[0].tolist(), label = "summary ae, f")
+    x = np.arange(len(sum_scores)).tolist()
+    label_1 = "Raw " + metric
+    label_2 = "AE vector " + metric
+    plt.plot(x, sum_scores.tolist(), label = label_1)
+    plt.plot(x, ae_sum_scores.tolist(), label = label_2)
     plt.xlabel('Sentence')
     plt.ylabel('ROUGE score')
-    plt.title('Textrank for original vectors vs autonecoder vectors')
+    title = "ROUGE " +metric + " for raw (mean: " + str(avg_scores) +") and AE (mean: "+str(avg_scores_ae) +") for " + dataset_name
+    plt.title(title)
     plt.legend()
     plt.show()
 
@@ -111,27 +116,42 @@ def evaluate_bc3():
     
     # evaluate on 'summary' or 'subject'
     target = 'summary'
-    summary_len = 4
-    # target = 'subject'
-    # summary_len = 1
+    summary_len = 1
+    # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
+    # if using df_vectors, the outoencoder should only look at each document, as the features cannot be transloated to other documents!
+    corpus_ae = False
+    vector_set = 'df_vectors'
     # TODO: split in to some type of training and testset
-    sum_scores, ae_sum_scores = evaluate_rankings(BC3_df, BC3_df, target, summary_len)
-    analyze_and_plot_rouge_scores(sum_scores, ae_sum_scores)
+    sum_scores, ae_sum_scores = evaluate_rankings(BC3_df, BC3_df, target, summary_len, corpus_ae, vector_set)
+    # plot F scores:
+    analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'BC3 dataset')
+    # plot precision
+    analyze_and_plot_rouge_scores(sum_scores[1], ae_sum_scores[1], 'precision', 'BC3 dataset')
+    # plot recall
+    analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'BC3 dataset')
 
 def evaluate_spotify():
     SPOTIFY_PICKLE_TRAIN_LOC  = "./data/dataframes/spotify_train_vectors.pkl"
-    SPOTIFY_PICKLE_TEST_LOC  = "./data/dataframes/spotify_test_vectors_10.pkl" 
+    # SPOTIFY_PICKLE_TEST_LOC  = "./data/dataframes/spotify_test_vectors_10.pkl" 
+    # Try with the df vector representations!
+    SPOTIFY_PICKLE_TEST_LOC  = "./data/dataframes/spotify_test_vectors.pkl" 
     df_train = pd.read_pickle(SPOTIFY_PICKLE_TRAIN_LOC)
     df_test = pd.read_pickle(SPOTIFY_PICKLE_TEST_LOC)
     
     # evaluate on 'summary' or 'subject'
     target = 'episode_desc'
     summary_len = 3
-    corpus_ae = False
-    # target = 'subject'
-    # summary_len = 1
-    sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae)
-    analyze_and_plot_rouge_scores(sum_scores, ae_sum_scores)
+    corpus_ae = False # if false, the autoencoder is only trained on the sentences in the current document
+    # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
+    vector_set = 'df_vectors'
+
+    sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae, vector_set)
+    # plot F scores:
+    analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'Spotify dataset')
+    # plot precision
+    analyze_and_plot_rouge_scores(sum_scores[1], ae_sum_scores[1], 'precision', 'Spotify dataset')
+    # plot recall
+    analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
 
 evaluate_spotify()
 # evaluate_bc3()
