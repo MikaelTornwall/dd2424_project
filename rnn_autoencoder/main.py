@@ -6,6 +6,7 @@
 
 
 from os import device_encoding
+import sys
 import random
 import pandas as pd
 import numpy as np
@@ -27,6 +28,7 @@ from plot import *
         [x] Add ROUGE metrics
         [x] Plot loss
         [x] Extend ROUGE metrics to rouge-1, rouge-2 and rouge-l
+        [] Use cross-entropy loss instead of negative log-likelihood loss (remove softmax-layer from encoder)
         
     Later
         [] Replace the embeddings with pre-trained word embeddings such as word2vec or GloVe
@@ -45,16 +47,13 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=config.DEVICE)
 
     loss = 0
-
-    # print(f'input length: {input_length}')
+    
     for input in range(input_length):
         encoder_output, encoder_hidden = encoder(input_tensor[input], encoder_hidden)
         encoder_outputs[input] = encoder_output[0, 0]
 
     decoder_input = torch.tensor([[config.SOS_TOKEN]], device=config.DEVICE)
-
     decoder_hidden = encoder_hidden
-
     use_teacher_forcing = True if random.random() < config.TFR else False
 
     if use_teacher_forcing:
@@ -111,9 +110,7 @@ def train_iterations(input_language, output_language, pairs, encoder, decoder, n
         if iteration % print_every == 0:
             print_loss_avg = print_loss_total / print_every
             print_loss_total = 0
-            print(f'{time_since(start, iteration / n_iters)} ({iteration} {iteration / n_iters * 100}%) {print_loss_avg}')
-            # print('%s (%d %d%%) %.4f' % (time_since(start, iter / n_iters),
-            #                              iter, iter / n_iters * 100, print_loss_avg))
+            print(f'{time_since(start, iteration / n_iters)} ({iteration} {iteration / n_iters * 100}%) {print_loss_avg}')            
         
         if iteration % plot_every == 0:
             plot_loss_avg = plot_loss_total / plot_every
@@ -138,16 +135,14 @@ def evaluate(input_language, output_language, encoder, decoder, text, max_length
             encoder_outputs[input] += encoder_output[0, 0]
 
         decoder_input = torch.tensor([[config.SOS_TOKEN]], device=config.DEVICE)
-
         decoder_hidden = encoder_hidden
-
         decoded_words = []
         decoder_attns = torch.zeros(max_length, max_length)
 
         for input in range(max_length):
             decoder_output, decoder_hidden, decoder_attn = decoder(decoder_input, decoder_hidden, encoder_outputs)
             decoder_attns[input] = decoder_attn.data
-            topv, topi = decoder_output.data.topk(1)
+            _, topi = decoder_output.data.topk(1)
             if topi.item() == config.EOS_TOKEN:
                 decoded_words.append('<EOS>')
                 break
@@ -162,95 +157,110 @@ def evaluate(input_language, output_language, encoder, decoder, text, max_length
 def evaluate_randomly(input_language, output_language, pairs, encoder, decoder, n=10):
     for i in range(n):
         pair = random.choice(pairs)
-        print('>', pair[0])
-        print('=', pair[1])
+        print('<Text body>', pair[0], '<\Text body>\n')
+        print('<Summary>', pair[1], '</Summary>\n')
         output_words, attentions = evaluate(input_language, output_language, encoder, decoder, pair[0])
         output_sentence = ' '.join(output_words)
-        print('<', output_sentence)
-        print('')
+        print('<Output>', output_sentence, '</Output>\n')        
 
 
 def rouge_scores(input_language, output_language, pairs, encoder, decoder):    
     N = len(pairs)
     evaluator = Rouge() 
-    rouge_avgs = {
-        'rouge-1': np.zeros(3),
-        'rouge-2': np.zeros(3),
-        'rouge-l': np.zeros(3)
-    }
     
-    rouge_sums = {
+    rouge_vals = {
         'rouge-1': np.zeros((3, N)),
         'rouge-2': np.zeros((3, N)),
         'rouge-l': np.zeros((3, N))
     }
-    
 
     for i, pair in enumerate(pairs):
         output_words, attns = evaluate(input_language, output_language, encoder, decoder, pair[0])
         output_sentence = ' '.join(output_words)
+        if len(output_sentence) == 0 or len(pair[1]) == 0: continue
         rouge_score = evaluator.get_scores(pair[1], output_sentence)
-        rouge_avgs['rouge-1'][0] += (1 / N) * rouge_score[0]['rouge-1']['f']
-        rouge_avgs['rouge-1'][1] += (1 / N) * rouge_score[0]['rouge-1']['p']
-        rouge_avgs['rouge-1'][2] += (1 / N) * rouge_score[0]['rouge-1']['r']
-        rouge_avgs['rouge-2'][0] += (1 / N) * rouge_score[0]['rouge-2']['f']
-        rouge_avgs['rouge-2'][1] += (1 / N) * rouge_score[0]['rouge-2']['p']
-        rouge_avgs['rouge-2'][2] += (1 / N) * rouge_score[0]['rouge-2']['r']
-        rouge_avgs['rouge-l'][0] += (1 / N) * rouge_score[0]['rouge-l']['f']
-        rouge_avgs['rouge-l'][1] += (1 / N) * rouge_score[0]['rouge-l']['p']
-        rouge_avgs['rouge-l'][2] += (1 / N) * rouge_score[0]['rouge-l']['r']
+        # rouge_avgs['rouge-1'][0] += (1 / N) * rouge_score[0]['rouge-1']['f']
+        # rouge_avgs['rouge-1'][1] += (1 / N) * rouge_score[0]['rouge-1']['p']
+        # rouge_avgs['rouge-1'][2] += (1 / N) * rouge_score[0]['rouge-1']['r']
+        # rouge_avgs['rouge-2'][0] += (1 / N) * rouge_score[0]['rouge-2']['f']
+        # rouge_avgs['rouge-2'][1] += (1 / N) * rouge_score[0]['rouge-2']['p']
+        # rouge_avgs['rouge-2'][2] += (1 / N) * rouge_score[0]['rouge-2']['r']
+        # rouge_avgs['rouge-l'][0] += (1 / N) * rouge_score[0]['rouge-l']['f']
+        # rouge_avgs['rouge-l'][1] += (1 / N) * rouge_score[0]['rouge-l']['p']
+        # rouge_avgs['rouge-l'][2] += (1 / N) * rouge_score[0]['rouge-l']['r']
 
-        rouge_sums['rouge-1'][0][i] = rouge_score[0]['rouge-1']['f']
-        rouge_sums['rouge-1'][1][i] = rouge_score[0]['rouge-1']['p']
-        rouge_sums['rouge-1'][2][i] = rouge_score[0]['rouge-1']['r']
-        rouge_sums['rouge-2'][0][i] = rouge_score[0]['rouge-2']['f']
-        rouge_sums['rouge-2'][1][i] = rouge_score[0]['rouge-2']['p']
-        rouge_sums['rouge-2'][2][i] = rouge_score[0]['rouge-2']['r']
-        rouge_sums['rouge-l'][0][i] = rouge_score[0]['rouge-l']['f']
-        rouge_sums['rouge-l'][1][i] = rouge_score[0]['rouge-l']['p']
-        rouge_sums['rouge-l'][2][i] = rouge_score[0]['rouge-l']['r']
+        rouge_vals['rouge-1'][0][i] = rouge_score[0]['rouge-1']['f']
+        rouge_vals['rouge-1'][1][i] = rouge_score[0]['rouge-1']['p']
+        rouge_vals['rouge-1'][2][i] = rouge_score[0]['rouge-1']['r']
+        rouge_vals['rouge-2'][0][i] = rouge_score[0]['rouge-2']['f']
+        rouge_vals['rouge-2'][1][i] = rouge_score[0]['rouge-2']['p']
+        rouge_vals['rouge-2'][2][i] = rouge_score[0]['rouge-2']['r']
+        rouge_vals['rouge-l'][0][i] = rouge_score[0]['rouge-l']['f']
+        rouge_vals['rouge-l'][1][i] = rouge_score[0]['rouge-l']['p']
+        rouge_vals['rouge-l'][2][i] = rouge_score[0]['rouge-l']['r']
+
+    rouge_avgs = {'rouge-1': np.zeros(3), 'rouge-2': np.zeros(3), 'rouge-l': np.zeros(3)}
+    rouge_sums = {'rouge-1': np.zeros(3), 'rouge-2': np.zeros(3), 'rouge-l': np.zeros(3)}
+
+    for key in rouge_vals.keys():
+        for i in range(3):
+            rouge_sums[key][i] = sum(rouge_vals[key][i])
+            rouge_avgs[key][i] = (1 / N) * rouge_sums[key][i]    
         
     print(f'rouge-1: {rouge_avgs}')
     return rouge_avgs, rouge_sums
     
 
-# def main():
-#     training_data = pd.read_pickle(r'../data/dataframes/spotify_train_vectors.pkl')
-#     test_data = pd.read_pickle(r'../data/dataframes/spotify_test_vectors.pkl')
-#     print(training_data.info())    
-#     print(test_data.info())    
-    
-#     X_train, Y_train = training_data['body'], training_data['episode_desc']
-#     X_test, Y_test = test_data['body'], test_data['episode_desc']
-    
-#     clean_body_train, clean_summary_train = clean_text(X_train), clean_text(Y_train)
-#     clean_body_test, clean_body_summary = clean_text(X_test), clean_text(Y_test)
-    
-#     # print('Transcription')
-#     # print(clean_body[0])
-#     # print('Summary')
-#     # print(clean_summary[0])
-    
-#     input_language, output_language, pairs_train = prepare_data(clean_body_train, clean_summary_train)
-    
-#     pairs_test = [[clean_body_test[i], clean_body_summary[i]] for i in range(len(clean_body_test))]
-    
-#     for pair in pairs_test:
-#         input_language.add_sentence(pair[0])
-#         output_language.add_sentence(pair[1])
-
-#     # input_tensor, target_tensor = tensors_from_pair(input_language, output_language, pairs[0])
-    
-#     hidden_size = 256
-#     encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
-#     attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
-
-#     n_iterations = 500
-#     train_iterations(input_language, output_language, pairs_train, encoder, attn_decoder, n_iterations, print_every=100)
-#     evaluate_randomly(input_language, output_language, pairs_test, encoder, attn_decoder)
-
-
 def main():
+    spotify = False
+    if len(sys.argv) > 1: spotify = sys.argv[1]
+    
+    if spotify:    
+        training_data = pd.read_pickle(r'../data/dataframes/spotify_train_vectors.pkl')
+        X, Y = training_data['body'], training_data['episode_desc']
+    else:
+        training_data = pd.read_pickle(r'../data/dataframes/wrangled_BC3_df.pkl')
+        X, Y = training_data['body'], training_data['summary']
+    
+    print(training_data.info())  
+    # config.MAX_LENGTH = len(max(list(training_data['body']), key=len))
+    
+    clean_body, clean_summary = clean_text(X), clean_text(Y)
+    
+    # print('Transcription')
+    # print(clean_body_train[0])
+    # print('Summary')
+    # print(clean_summary_train[0])
+    
+    input_language, output_language, pairs = prepare_data(clean_body, clean_summary)
+    idx = np.random.permutation(len(pairs))
+    idx_train, idx_test = idx[:len(idx) - 15], idx[len(idx) - 15:]
+    pairs_train, pairs_test = np.array(pairs)[idx_train], np.array(pairs)[idx_test]
+    
+    hidden_size = 256
+    encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
+    attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
+
+    n_iterations = 7500
+    lr = 0.01
+    train_iterations(input_language, output_language, pairs_train, encoder, attn_decoder, n_iterations, print_every=100, plot_every=100, learning_rate=lr)
+    
+    print('Training data')
+    evaluate_randomly(input_language, output_language, pairs_train, encoder, attn_decoder)
+    print('Test data')
+    evaluate_randomly(input_language, output_language, pairs_test, encoder, attn_decoder)
+    
+    rouge_scores(input_language, output_language, pairs_train, encoder, attn_decoder)
+    rouge_scores(input_language, output_language, pairs_test, encoder, attn_decoder)
+
+
+if __name__ == '__main__':
+    main()
+
+"""
+    BC3 main
+
+    def main():
     data = pd.read_pickle(r'../data/dataframes/wrangled_BC3_df.pkl')
     print(data.info())
     X = data['body']
@@ -275,35 +285,15 @@ def main():
 
     n_iterations = 25000
     learning_rate = 0.01
+
     train_iterations(input_language, output_language, train_pairs, encoder, attn_decoder, n_iterations, print_every=100, plot_every=100, learning_rate=learning_rate)
+
+    print('Training data')
+    evaluate_randomly(input_language, output_language, train_pairs, encoder, attn_decoder)
+    rouge_scores(input_language, output_language, train_pairs, encoder, attn_decoder)
+    
+    print('Test data')
     evaluate_randomly(input_language, output_language, test_pairs, encoder, attn_decoder)
     rouge_scores(input_language, output_language, test_pairs, encoder, attn_decoder)
-
-
-if __name__ == '__main__':
-    main()
-
-"""
-    BC3 main
-
-    def main():
-        data = pd.read_pickle(r'../data/dataframes/wrangled_BC3_df.pkl')
-        print(data.info())
-        X = data['body']
-        Y = data['summary']
-
-        clean_body = clean_text(X)
-        clean_summary = clean_text(Y)
-        input_language, output_language, pairs = prepare_data(clean_body, clean_summary)
-
-        # input_tensor, target_tensor = tensors_from_pair(input_language, output_language, pairs[0])
-        
-        hidden_size = 256
-        encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
-        attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
-
-        n_iterations = 75000
-        train_iterations(input_language, output_language, pairs, encoder, attn_decoder, n_iterations, print_every=100)
-        evaluate_randomly(input_language, output_language, pairs, encoder, attn_decoder)
 
 """
