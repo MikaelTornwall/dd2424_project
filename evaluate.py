@@ -95,7 +95,9 @@ def evaluate_rankings(df_train, df_test, target, sum_len, corpus_ae=True, vector
 
                 # get the ROUGE scores for the ranked sentences and add to plot data
                 sum_score = evaluator.get_scores(sum_str, reference)
+                print('rouge scores: ', sum_score)
                 sum_ae_score = evaluator.get_scores(sum_ae_str, reference)
+                print('rouge scores ae: ', sum_ae_score)
                 sum_scores[0, curr_row] = sum_score[0]['rouge-1']['f']
                 sum_scores[1, curr_row] = sum_score[0]['rouge-1']['p']
                 sum_scores[2, curr_row] = sum_score[0]['rouge-1']['r']
@@ -164,10 +166,10 @@ def evaluate_spotify():
     
     # evaluate on 'summary' or 'subject'
     target = 'episode_desc'
-    summary_len = 1
+    summary_len = 5
     corpus_ae = True # if false, the autoencoder is only trained on the sentences in the current document
     # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
-    vector_set = 'sentence_vectors'
+    vector_set = 'df_vectors'
 
     sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae, vector_set)
     # plot F scores:
