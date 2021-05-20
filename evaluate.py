@@ -1,7 +1,5 @@
-from pandas.core.base import SelectionMixin
 from summarize import *
-from autoencoder.autoencoder import *
-from summarize import *
+from rbm_dae.deepAE import *
 import rouge
 
 
@@ -142,7 +140,7 @@ def evaluate_bc3():
     summary_len = 1
     # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
     # if using df_vectors, the outoencoder should only look at each document, as the features cannot be transloated to other documents!
-    corpus_ae = False
+    corpus_ae = True
     vector_set = 'df_vectors'
     # TODO: split in to some type of training and testset
     sum_scores, ae_sum_scores = evaluate_rankings(BC3_df, BC3_df, target, summary_len, corpus_ae, vector_set)
@@ -155,7 +153,7 @@ def evaluate_bc3():
 
 def evaluate_spotify():
     """
-    Base function to run and plot the ROUGE scores for the bc3 dataset
+    Base function to run and plot the ROUGE scores for the spotify dataset
     """
     SPOTIFY_PICKLE_TRAIN_LOC  = "./data/dataframes/spotify_train_vectors.pkl"
     SPOTIFY_PICKLE_TEST_LOC  = "./data/dataframes/spotify_test_vectors.pkl" 
@@ -177,6 +175,6 @@ def evaluate_spotify():
     # plot recall
     analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
 
-evaluate_spotify()
-# evaluate_bc3()
+# evaluate_spotify()
+evaluate_bc3()
 
