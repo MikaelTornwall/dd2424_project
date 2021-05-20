@@ -57,7 +57,7 @@ def compute_tf_for_docs(df, n_features):
             scores = scores + X
             doc_tfs.append(scores)
         else: # append empty to be able to merge with bc3 data
-            doc_tfs.append([])
+            doc_tfs.append(None)
 
     return doc_tfs
 

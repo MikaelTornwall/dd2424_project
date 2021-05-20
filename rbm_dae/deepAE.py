@@ -91,7 +91,6 @@ def train_DAE(sentence_vectors):
         sentence_vectors,
         batch_size=100,
         shuffle=True,
-        drop_last=True
     )
 
     # pre-training

@@ -28,6 +28,8 @@ def vectorize():
     # add the normalized term frequency vectors
     n_features = 50
     bc3_glove_tf = compute_and_add_tf_to_dataframe(bc3_glove_sents, n_features)
+    # remove the rows that does not have df vector representation
+    bc3_glove_tf = bc3_glove_tf[bc3_glove_tf.df_vectors.notnull()]
     print(bc3_glove_tf)
 
     # Store the pandas including the sentence vectors

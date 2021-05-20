@@ -134,6 +134,10 @@ def evaluate_bc3():
     """
     BC3_PICKLE_LOC  = "./data/dataframes/BC3_df_with_sentence_vectors.pkl"  
     BC3_df = pd.read_pickle(BC3_PICKLE_LOC)
+    # df contains 127 rows that all have df_vectors representation!
+    # Split into training and test set
+    BC3_df_train = BC3_df.iloc[:117]
+    BC3_df_test = BC3_df.iloc[117:]
     
     # evaluate on 'summary' or 'subject'
     target = 'summary'
@@ -142,8 +146,7 @@ def evaluate_bc3():
     # if using df_vectors, the outoencoder should only look at each document, as the features cannot be transloated to other documents!
     corpus_ae = True
     vector_set = 'df_vectors'
-    # TODO: split in to some type of training and testset
-    sum_scores, ae_sum_scores = evaluate_rankings(BC3_df, BC3_df, target, summary_len, corpus_ae, vector_set)
+    sum_scores, ae_sum_scores = evaluate_rankings(BC3_df_train, BC3_df_test, target, summary_len, corpus_ae, vector_set)
     # plot F scores:
     analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'BC3 dataset')
     # plot precision
