@@ -1,10 +1,11 @@
-import numpy as np
+
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from CGDs import ACGD
 import matplotlib.pyplot as plt
 
 """
@@ -22,7 +23,7 @@ https://github.com/eugenet12/pytorch-rbm-autoencoder
 
 def get_vector_data():
     # 1. fetch the data
-    BC3_PICKLE_LOC = "./data/spotify_test_vectors_10.pkl"
+    BC3_PICKLE_LOC = "../data/dataframes/BC3_df_with_sentence_vectors.pkl"
     BC3_df = pd.read_pickle(BC3_PICKLE_LOC)
 
     # 'sentence_vectors' for glove vectors, precalculated word vectors
@@ -253,28 +254,36 @@ def train_DAE(sentence_vectors):
     # pre-training
     rbm_models = stackedRBM(sentence_vectors, sentenceloader)
 
-
     # fine-tune Deep Auto Encoder
     dae = DAE(rbm_models)  # Using the pre-training RBM models as input
-    optimizer = optim.Adam(dae.parameters(), 1e-3)
-    criterion = nn.MSELoss()                        # gradient descent ?
+
+    # optimizer = optim.SGD(dae.parameters(), 1e-3)
+    optimizer = optim.Adam(dae.parameters(), 1e-3)  # dae.parameters() includes all the parameters for the dae list(dae.parameters())
+
+    #criterion = nn.MSELoss()                     # mean square loss function
+    criterion = nn.BCELoss()                      # binary cross entropy loss function
 
     # The paper uses cross-entropy error as the loss function and
     # mini-batch CG with line search and the Polak-Ribiere rule for search direction.
 
-    # We could discuss if we think we have time to implement this
-    # right now we are using Mean-squared Error and Adam optimizer
 
-    for epoch in range(100):
+    for epoch in range(200):
         running_loss = 0.0
 
         for i, sentence in enumerate(sentenceloader):
-            batch_loss = criterion(sentence, dae(sentence))  # difference between actual sentence and reconstructed sentence
-            running_loss += batch_loss.item()
 
-            optimizer.zero_grad()
-            batch_loss.backward()
-            optimizer.step()
+            #difference between actual sentence and reconstructed sentence
+
+            #batch_loss = criterion(sentence, dae(sentence))  # for MSELoss()
+
+            batch_loss = criterion(dae(sentence),sentence)    # for BCEloss()
+
+            running_loss += batch_loss.item()                # dae(sentence) uses the forward method
+
+            optimizer.zero_grad()   # We need to set the gradients to zero before starting to do backpropragation
+            batch_loss.backward()   # Backward is the function which actually calculates the gradient which is stored internally in the tensors
+            optimizer.step()        # step() makes the optimizer iterate over all parameters (tensors) it is supposed to update
+                                    # and use their internally stored grad to update their values
 
         loss = running_loss / len(sentenceloader)
         train_loss.append(loss)
@@ -285,9 +294,10 @@ sentence_vectors = get_vector_data()
 
 train_loss = train_DAE(sentence_vectors)
 
-# plt.figure()
-# plt.plot(train_loss)
-# plt.title('Train Loss')
-# plt.xlabel('Epochs')
-# plt.ylabel('Loss')
-# plt.savefig('glove_DAE__loss.png')
+plt.figure()
+plt.plot(train_loss)
+plt.title('Train Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.show()
+#plt.savefig('DAE__loss.png')
