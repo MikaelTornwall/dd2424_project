@@ -142,8 +142,8 @@ def evaluate_bc3():
     summary_len = 1
     # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
     # if using df_vectors, the outoencoder should only look at each document, as the features cannot be transloated to other documents!
-    corpus_ae = False
-    vector_set = 'df_vectors'
+    corpus_ae = True
+    vector_set = 'sentence_vectors'
     # TODO: split in to some type of training and testset
     sum_scores, ae_sum_scores = evaluate_rankings(BC3_df, BC3_df, target, summary_len, corpus_ae, vector_set)
     # plot F scores:
@@ -171,12 +171,12 @@ def evaluate_spotify():
 
     sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae, vector_set)
     # plot F scores:
-    # analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'Spotify dataset')
+    analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'Spotify dataset')
     # plot precision
-    # analyze_and_plot_rouge_scores(sum_scores[1], ae_sum_scores[1], 'precision', 'Spotify dataset')
+    analyze_and_plot_rouge_scores(sum_scores[1], ae_sum_scores[1], 'precision', 'Spotify dataset')
     # plot recall
-    # analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
+    analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
 
-evaluate_spotify()
-# evaluate_bc3()
+# evaluate_spotify()
+evaluate_bc3()
 

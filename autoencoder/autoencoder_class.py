@@ -36,7 +36,7 @@ class Autoencoder(nn.Module):
         return x
 
 class DAE(nn.Module):
-    def __init__(self, models):
+    def __init__(self, models, use_models=True):
         """Create a deep autoencoder based on a list of RBM models"""
         super(DAE, self).__init__()
 
@@ -45,6 +45,16 @@ class DAE(nn.Module):
         self.encoder_biases = nn.ParameterList([nn.Parameter(model.h_bias.clone()) for model in models])
         self.decoders = nn.ParameterList([nn.Parameter(model.W.clone()) for model in reversed(models)])
         self.decoder_biases = nn.ParameterList([nn.Parameter(model.v_bias.clone()) for model in reversed(models)])
+        
+        if not use_models:
+            for encoder in self.encoders:
+                torch.nn.init.xavier_normal_(encoder, gain=1.0)
+            for encoder_bias in self.encoder_biases:
+                torch.nn.init.zeros_(encoder_bias)
+            for decoder in self.decoders:
+                torch.nn.init.xavier_normal_(decoder, gain=1.0)
+            for decoder_bias in self.encoder_biases:
+                torch.nn.init.zeros_(decoder_bias)
 
     def forward(self, v):
         """Forward step"""

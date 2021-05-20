@@ -55,8 +55,7 @@ def train_autoencoder(df, vector_set):
         shuffle=True
     )
     rbm_models = train_rbm_model_parameters(df, vector_set)
-    net = DAE(rbm_models)
-    # net = Autoencoder()
+    net = DAE(rbm_models, False)
     criterion = nn.MSELoss()
     optimizer = optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
