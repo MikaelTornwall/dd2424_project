@@ -37,7 +37,7 @@ def get_vector_data(df, vector_set):
                 vecs = torch.cat((vecs, v), 0)
     return vecs
 
-def stackedRBM(sentences, sentenceloader):
+def stackedRBM(sentences, sentenceloader, train_batch_size):
     rbm_models = []
     visible_dim = sentences.shape[1]
     current_sentenceloader = sentenceloader
@@ -74,7 +74,7 @@ def stackedRBM(sentences, sentenceloader):
 
         current_sentenceloader = DataLoader(
             current_sentences,
-            batch_size=100,
+            batch_size=train_batch_size,
             shuffle=False,
             drop_last=True
         )
@@ -84,17 +84,22 @@ def stackedRBM(sentences, sentenceloader):
     return rbm_models
 
 
-def train_DAE(sentence_vectors):
+def train_DAE(sentence_vectors, batch_size):
     train_loss = []
+    train_batch_size = batch_size
+    # update so that there will be at least one batch for small vector sets..
+    if sentence_vectors.shape[0] < batch_size:
+       train_batch_size = sentence_vectors.shape[0]
 
     sentenceloader = DataLoader(
         sentence_vectors,
-        batch_size=100,
+        batch_size=train_batch_size,
         shuffle=True,
+        drop_last=True
     )
 
     # pre-training
-    rbm_models = stackedRBM(sentence_vectors, sentenceloader)
+    rbm_models = stackedRBM(sentence_vectors, sentenceloader, train_batch_size)
 
     # fine-tune Deep Auto Encoder
     dae = DAE(rbm_models)  # Using the pre-training RBM models as input
@@ -138,8 +143,9 @@ def train_autoencoder(df, vector_set):
         vector_set: the vector column to use. can be df_vectors or sentence_vectors (glove)
     """
     sentence_vectors = get_vector_data(df, vector_set)
+    batch_size = 100
 
-    dae, train_loss = train_DAE(sentence_vectors)
+    dae, train_loss = train_DAE(sentence_vectors, batch_size)
 
     plt.figure()
     plt.plot(train_loss)
