@@ -132,7 +132,7 @@ def evaluate_bc3():
     """
     Base function to run and plot the ROUGE scores for the bc3 dataset
     """
-    BC3_PICKLE_LOC  = "./data/dataframes/BC3_df_with_sentence_vectors.pkl"  
+    BC3_PICKLE_LOC  = "./final_data/BC3_127.pkl"  
     BC3_df = pd.read_pickle(BC3_PICKLE_LOC)
     # df contains 127 rows that all have df_vectors representation!
     # Split into training and test set
@@ -144,7 +144,7 @@ def evaluate_bc3():
     summary_len = 1
     # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
     # if using df_vectors, the outoencoder should only look at each document, as the features cannot be transloated to other documents!
-    corpus_ae = False
+    corpus_ae = True
     vector_set = 'df_vectors'                #df_vectors
     sum_scores, ae_sum_scores = evaluate_rankings(BC3_df_train, BC3_df_test, target, summary_len, corpus_ae, vector_set)
     # plot F scores:
@@ -158,17 +158,19 @@ def evaluate_spotify():
     """
     Base function to run and plot the ROUGE scores for the spotify dataset
     """
-    SPOTIFY_PICKLE_TRAIN_LOC  = "./data/dataframes/spotify_train_vectors.pkl"
-    SPOTIFY_PICKLE_TEST_LOC  = "./data/dataframes/spotify_test_vectors.pkl" 
+    SPOTIFY_PICKLE_TRAIN_LOC  = "./final_data/spotify_train_422.pkl"
+    SPOTIFY_PICKLE_TEST_LOC  = "./final_data/spotify_test_45.pkl" 
     df_train = pd.read_pickle(SPOTIFY_PICKLE_TRAIN_LOC)
     df_test = pd.read_pickle(SPOTIFY_PICKLE_TEST_LOC)
+    print(df_train)
+    print(df_test)
     
     # evaluate on 'summary' or 'subject'
     target = 'episode_desc'
     summary_len = 1
     corpus_ae = True # if false, the autoencoder is only trained on the sentences in the current document
     # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
-    vector_set = 'sentence_vectors'
+    vector_set = 'df_vectors'
 
     sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae, vector_set)
     # plot F scores:
@@ -178,6 +180,6 @@ def evaluate_spotify():
     # plot recall
     analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
 
-# evaluate_spotify()
-evaluate_bc3()
+evaluate_spotify()
+# evaluate_bc3()
 

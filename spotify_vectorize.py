@@ -22,6 +22,8 @@ def vectorize():
     n_features = 50
     spotify_df_sents_train = compute_and_add_tf_to_dataframe(spotify_glove_sents_train, n_features)
     spotify_df_sents_test = compute_and_add_tf_to_dataframe(spotify_glove_sents_test, n_features)
+    spotify_df_sents_train = spotify_df_sents_train[spotify_df_sents_train.df_vectors.notnull()]
+    spotify_df_sents_test = spotify_df_sents_test[spotify_df_sents_test.df_vectors.notnull()]
 
     # Store the pandas including the sentence vectors
     SPOTIFY_PICKLE_TRAIN_VEC_LOC  = "./data/dataframes/spotify_train_vectors.pkl"
