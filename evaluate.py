@@ -144,8 +144,8 @@ def evaluate_bc3():
     summary_len = 1
     # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
     # if using df_vectors, the outoencoder should only look at each document, as the features cannot be transloated to other documents!
-    corpus_ae = True
-    vector_set = 'df_vectors'
+    corpus_ae = False
+    vector_set = 'df_vectors'                #df_vectors
     sum_scores, ae_sum_scores = evaluate_rankings(BC3_df_train, BC3_df_test, target, summary_len, corpus_ae, vector_set)
     # plot F scores:
     analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'BC3 dataset')

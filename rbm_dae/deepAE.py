@@ -43,7 +43,7 @@ def stackedRBM(sentences, sentenceloader, train_batch_size):
     current_sentenceloader = sentenceloader
 
     for hidden_dim in [140, 40, 30, 10]:
-        num_epochs = 50
+        num_epochs = 100
         learning_rate = 1e-3
         use_gaussian = hidden_dim == 10  # Use gaussian distribution on last layer
 
