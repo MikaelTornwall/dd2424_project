@@ -70,6 +70,9 @@ def stackedRBM(sentences, sentenceloader, train_batch_size):
 
         current_sentences = [rbm.sample_h(data_list)[1].detach().numpy() for data_list in current_sentenceloader]
         current_sentences = torch.FloatTensor(current_sentences)
+        # problem: we get activations for a batch, and then this data is aggregated for each of the batches. 
+        # fix: reshape so that the first two dimensions are merged!
+        current_sentences = torch.flatten(current_sentences, start_dim=0, end_dim=1)
 
         current_sentenceloader = DataLoader(
             current_sentences,

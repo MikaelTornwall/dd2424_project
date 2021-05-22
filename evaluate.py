@@ -162,8 +162,6 @@ def evaluate_spotify():
     SPOTIFY_PICKLE_TEST_LOC  = "./final_data/spotify_test_45.pkl" 
     df_train = pd.read_pickle(SPOTIFY_PICKLE_TRAIN_LOC)
     df_test = pd.read_pickle(SPOTIFY_PICKLE_TEST_LOC)
-    print(df_train)
-    print(df_test)
     
     # evaluate on 'summary' or 'subject'
     target = 'episode_desc'
@@ -180,6 +178,6 @@ def evaluate_spotify():
     # plot recall
     analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
 
-evaluate_spotify()
-# evaluate_bc3()
+# evaluate_spotify()
+evaluate_bc3()
 
