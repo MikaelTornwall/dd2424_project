@@ -22,20 +22,6 @@ from utils import *
 from plot import *
 
 
-"""
-    TODO:
-    Now
-        [x] Add ROUGE metrics
-        [x] Plot loss
-        [x] Extend ROUGE metrics to rouge-1, rouge-2 and rouge-l
-        [] Use cross-entropy loss instead of negative log-likelihood loss (remove softmax-layer from encoder)
-        
-    Later
-        [] Replace the embeddings with pre-trained word embeddings such as word2vec or GloVe
-        [] Try with more layers, more hidden units, and more sentences. Compare the training time and results.
-"""
-
-
 def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, max_length=config.MAX_LENGTH):
     encoder_hidden = encoder.init_hidden()
     encoder_optimizer.zero_grad()
@@ -95,7 +81,6 @@ def train_iterations(input_language, output_language, pairs, encoder, decoder, n
     training_pairs = [tensors_from_pair(input_language, output_language, random.choice(pairs)) for _ in range(n_iters)]
     
     # negative log-likelihood loss
-    # alternatively we can remove softmax layer and use cross-entropy loss
     criterion = nn.NLLLoss()
 
     for iteration in range(1, n_iters + 1):
@@ -179,16 +164,6 @@ def rouge_scores(input_language, output_language, pairs, encoder, decoder):
         output_sentence = ' '.join(output_words)
         if len(output_sentence) == 0 or len(pair[1]) == 0: continue
         rouge_score = evaluator.get_scores(pair[1], output_sentence)
-        # rouge_avgs['rouge-1'][0] += (1 / N) * rouge_score[0]['rouge-1']['f']
-        # rouge_avgs['rouge-1'][1] += (1 / N) * rouge_score[0]['rouge-1']['p']
-        # rouge_avgs['rouge-1'][2] += (1 / N) * rouge_score[0]['rouge-1']['r']
-        # rouge_avgs['rouge-2'][0] += (1 / N) * rouge_score[0]['rouge-2']['f']
-        # rouge_avgs['rouge-2'][1] += (1 / N) * rouge_score[0]['rouge-2']['p']
-        # rouge_avgs['rouge-2'][2] += (1 / N) * rouge_score[0]['rouge-2']['r']
-        # rouge_avgs['rouge-l'][0] += (1 / N) * rouge_score[0]['rouge-l']['f']
-        # rouge_avgs['rouge-l'][1] += (1 / N) * rouge_score[0]['rouge-l']['p']
-        # rouge_avgs['rouge-l'][2] += (1 / N) * rouge_score[0]['rouge-l']['r']
-
         rouge_vals['rouge-1'][0][i] = rouge_score[0]['rouge-1']['f']
         rouge_vals['rouge-1'][1][i] = rouge_score[0]['rouge-1']['p']
         rouge_vals['rouge-1'][2][i] = rouge_score[0]['rouge-1']['r']
@@ -206,31 +181,24 @@ def rouge_scores(input_language, output_language, pairs, encoder, decoder):
         for i in range(3):
             rouge_sums[key][i] = sum(rouge_vals[key][i])
             rouge_avgs[key][i] = (1 / N) * rouge_sums[key][i]    
-        
-    print(f'rouge-1: {rouge_avgs}')
+            
     return rouge_avgs, rouge_sums
     
 
 def main():
-    spotify = False
-    if len(sys.argv) > 1: spotify = sys.argv[1]
-    
-    if spotify:    
-        training_data = pd.read_pickle(r'../data/dataframes/spotify_train_vectors.pkl')
+    if len(sys.argv) > 1 and sys.argv[1] == 'True':        
+        print(f'Using Spotify data')
+        training_data = pd.read_pickle(r'../final_data/spotify_train_422.pkl')
         X, Y = training_data['body'], training_data['episode_desc']
-    else:
-        training_data = pd.read_pickle(r'../data/dataframes/wrangled_BC3_df.pkl')
-        X, Y = training_data['body'], training_data['summary']
-    
+    else: 
+        print(f'Using BC3 data')
+        training_data = pd.read_pickle(r'../final_data/BC3_127.pkl')
+        X, Y = training_data['body'], training_data['summary']                
+
     print(training_data.info())  
-    # config.MAX_LENGTH = len(max(list(training_data['body']), key=len))
+    config.MAX_LENGTH = len(max(list(training_data['body']), key=len))
     
     clean_body, clean_summary = clean_text(X), clean_text(Y)
-    
-    # print('Transcription')
-    # print(clean_body_train[0])
-    # print('Summary')
-    # print(clean_summary_train[0])
     
     input_language, output_language, pairs = prepare_data(clean_body, clean_summary)
     idx = np.random.permutation(len(pairs))
@@ -241,7 +209,7 @@ def main():
     encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
     attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
 
-    n_iterations = 7500
+    n_iterations = 15000
     lr = 0.01
     train_iterations(input_language, output_language, pairs_train, encoder, attn_decoder, n_iterations, print_every=100, plot_every=100, learning_rate=lr)
     
@@ -250,50 +218,11 @@ def main():
     print('Test data')
     evaluate_randomly(input_language, output_language, pairs_test, encoder, attn_decoder)
     
-    rouge_scores(input_language, output_language, pairs_train, encoder, attn_decoder)
-    rouge_scores(input_language, output_language, pairs_test, encoder, attn_decoder)
+    rouge_training = rouge_scores(input_language, output_language, pairs_train, encoder, attn_decoder)
+    print(f'Rouge scores for training data\n{rouge_training}')
+    rouge_test = rouge_scores(input_language, output_language, pairs_test, encoder, attn_decoder)
+    print(f'Rouge scores for test data\n{rouge_test}')
 
 
 if __name__ == '__main__':
     main()
-
-"""
-    BC3 main
-
-    def main():
-    data = pd.read_pickle(r'../data/dataframes/wrangled_BC3_df.pkl')
-    print(data.info())
-    X = data['body']
-    Y = data['summary']
-
-    clean_body = clean_text(X)
-    clean_summary = clean_text(Y)
-
-    input_language, output_language, pairs = prepare_data(clean_body, clean_summary)
-    train_pairs = pairs[0:209]
-    test_pairs = pairs[209:259]
-
-    
-    # hidden_size = 128
-    hidden_size = 256
-    # hidden_size = 512
-    # hidden_sizes = [128, 256, 512]
-
-    # for hidden_size in hidden_sizes:
-    encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
-    attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
-
-    n_iterations = 25000
-    learning_rate = 0.01
-
-    train_iterations(input_language, output_language, train_pairs, encoder, attn_decoder, n_iterations, print_every=100, plot_every=100, learning_rate=learning_rate)
-
-    print('Training data')
-    evaluate_randomly(input_language, output_language, train_pairs, encoder, attn_decoder)
-    rouge_scores(input_language, output_language, train_pairs, encoder, attn_decoder)
-    
-    print('Test data')
-    evaluate_randomly(input_language, output_language, test_pairs, encoder, attn_decoder)
-    rouge_scores(input_language, output_language, test_pairs, encoder, attn_decoder)
-
-"""

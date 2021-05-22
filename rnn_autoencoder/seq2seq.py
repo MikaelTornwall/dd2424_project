@@ -29,11 +29,6 @@ import torch.optim as optim
 def remove_stopwords(sen):
     """
         From bc3_parser
-
-        TODO:
-            - Modify project so that importing resources from other folders becomes easy, 
-            i.e. __init__.py to every folder or something like that, check that out
-            - Create a single parser file that allows different summarizer tools to utilize the resources they need
     """
     stop_words = stopwords.words('english')
     new_sentence = " ".join([i for i in sen if i not in stop_words])
@@ -44,9 +39,6 @@ def clean_text(sentences):
     """
         Cleans email texts (body/summary) in a similar fashion as tokenize_email in bc3_parser, but
         additionally removes email addresses and URLs
-        
-        TODO: 
-            - possibly map I'm --> I am, you're --> you are, and so on
 
         Parameters
         ----------
