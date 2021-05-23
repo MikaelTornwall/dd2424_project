@@ -1,6 +1,14 @@
 import torch
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if torch.cuda.is_available():
+    print('GPU available')
+    DEVICE = torch.device('cuda')
+    print('Using cuda')
+else:
+    print('GPU not available')
+    DEVICE = torch.device('cpu')
+    print('Using CPU')
+
 MAX_LENGTH = 10000
 SOS_TOKEN = 0
 EOS_TOKEN = 1
@@ -9,5 +17,3 @@ EOS_TOKEN = 1
     Hyperparameters
 """
 TFR = 0.5
-n_layers = 1
-dropout = 0.1

@@ -159,6 +159,8 @@ def rouge_scores(input_language, output_language, pairs, encoder, decoder):
         'rouge-l': np.zeros((3, N))
     }
 
+    rouge_1f_vs_len = []
+
     for i, pair in enumerate(pairs):
         output_words, attns = evaluate(input_language, output_language, encoder, decoder, pair[0])
         output_sentence = ' '.join(output_words)
@@ -173,6 +175,7 @@ def rouge_scores(input_language, output_language, pairs, encoder, decoder):
         rouge_vals['rouge-l'][0][i] = rouge_score[0]['rouge-l']['f']
         rouge_vals['rouge-l'][1][i] = rouge_score[0]['rouge-l']['p']
         rouge_vals['rouge-l'][2][i] = rouge_score[0]['rouge-l']['r']
+        rouge_1f_vs_len.append([len(output_sentence),  rouge_vals['rouge-1'][0][i]])
 
     rouge_avgs = {'rouge-1': np.zeros(3), 'rouge-2': np.zeros(3), 'rouge-l': np.zeros(3)}
     rouge_sums = {'rouge-1': np.zeros(3), 'rouge-2': np.zeros(3), 'rouge-l': np.zeros(3)}
@@ -206,22 +209,27 @@ def main():
     pairs_train, pairs_test = np.array(pairs)[idx_train], np.array(pairs)[idx_test]
     
     hidden_size = 256
+    # hidden_sizes = [128, 256, 512]
+
+    # for hidden_size in hidden_sizes:
     encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
     attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)
 
-    n_iterations = 15000
+    n_iterations = 2500
     lr = 0.01
     train_iterations(input_language, output_language, pairs_train, encoder, attn_decoder, n_iterations, print_every=100, plot_every=100, learning_rate=lr)
     
-    print('Training data')
-    evaluate_randomly(input_language, output_language, pairs_train, encoder, attn_decoder)
-    print('Test data')
-    evaluate_randomly(input_language, output_language, pairs_test, encoder, attn_decoder)
+    # print('Training data')
+    # evaluate_randomly(input_language, output_language, pairs_train, encoder, attn_decoder)
+    # print('Test data')
+    # evaluate_randomly(input_language, output_language, pairs_test, encoder, attn_decoder)
     
-    rouge_training = rouge_scores(input_language, output_language, pairs_train, encoder, attn_decoder)
-    print(f'Rouge scores for training data\n{rouge_training}')
-    rouge_test = rouge_scores(input_language, output_language, pairs_test, encoder, attn_decoder)
+    print(f'Hidden size: {hidden_size}')
+    # rouge_training, _ = rouge_scores(input_language, output_language, pairs_train, encoder, attn_decoder)
+    # print(f'Rouge scores for training data\n{rouge_training}')
+    rouge_test, _ = rouge_scores(input_language, output_language, pairs_test, encoder, attn_decoder)
     print(f'Rouge scores for test data\n{rouge_test}')
+    print("------------------------------------------------------------------")
 
 
 if __name__ == '__main__':
