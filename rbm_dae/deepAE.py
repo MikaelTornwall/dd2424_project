@@ -43,7 +43,7 @@ def stackedRBM(sentences, sentenceloader, train_batch_size):
     current_sentenceloader = sentenceloader
 
     for hidden_dim in [140, 40, 30, 10]:
-        num_epochs = 100
+        num_epochs = 15 # set to 15 so that we can get a fine-tune parameter search in the autoencoder
         learning_rate = 1e-3
         use_gaussian = hidden_dim == 10  # Use gaussian distribution on last layer
 
@@ -109,23 +109,24 @@ def train_DAE(sentence_vectors, batch_size):
     # optimizer = optim.SGD(dae.parameters(), 1e-3)
     optimizer = optim.Adam(dae.parameters(), 1e-3)  # dae.parameters() includes all the parameters for the dae list(dae.parameters())
 
-    #criterion = nn.MSELoss()                     # mean square loss function
-    criterion = nn.BCELoss()                      # binary cross entropy loss function
+    # TODO: use MSE for glove vectors and BCE for df vectors!
+    # To run BCE loss on glove vectors, need to add:
+    # m = nn.Sigmoid()
+    # batch_loss = criterion(m(dae(sentence)),sentence)
 
+    # criterion = nn.MSELoss()                     # mean square loss function
+    criterion = nn.BCELoss()                      # binary cross entropy loss function
     # The paper uses cross-entropy error as the loss function and
     # mini-batch CG with line search and the Polak-Ribiere rule for search direction.
 
 
-    for epoch in range(200):
+    for epoch in range(100):
         running_loss = 0.0
 
         for i, sentence in enumerate(sentenceloader):
 
-            #difference between actual sentence and reconstructed sentence
-
-            #batch_loss = criterion(sentence, dae(sentence))  # for MSELoss()
-
-            batch_loss = criterion(dae(sentence),sentence)    # for BCEloss()
+            # difference between actual sentence and reconstructed sentence
+            batch_loss = criterion(dae(sentence), sentence)
 
             running_loss += batch_loss.item()                # dae(sentence) uses the forward method
 

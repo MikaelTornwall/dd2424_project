@@ -60,8 +60,8 @@ def evaluate_rankings(df_train, df_test, target, sum_len, corpus_ae=True, vector
     # loop through all docs in the corpus
     print('evaluating summaries..')
     df_len = int(df_test.shape[0])
-    sum_scores = np.zeros((3, df_len))
-    ae_sum_scores = np.zeros((3, df_len))
+    sum_scores = np.zeros((3, 3, df_len))
+    ae_sum_scores = np.zeros((3, 3, df_len))
     curr_row = 0
     for index, row in df_test.iterrows():
         print('iteration: ', index)
@@ -94,28 +94,45 @@ def evaluate_rankings(df_train, df_test, target, sum_len, corpus_ae=True, vector
                 # get the ROUGE scores for the ranked sentences and add to plot data
                 sum_score = evaluator.get_scores(sum_str, reference)
                 sum_ae_score = evaluator.get_scores(sum_ae_str, reference)
-                sum_scores[0, curr_row] = sum_score[0]['rouge-1']['f']
-                sum_scores[1, curr_row] = sum_score[0]['rouge-1']['p']
-                sum_scores[2, curr_row] = sum_score[0]['rouge-1']['r']
+                sum_scores[0, 0, curr_row] = sum_score[0]['rouge-1']['f']
+                sum_scores[0, 1, curr_row] = sum_score[0]['rouge-1']['p']
+                sum_scores[0, 2, curr_row] = sum_score[0]['rouge-1']['r']
+                sum_scores[1, 0, curr_row] = sum_score[0]['rouge-2']['f']
+                sum_scores[1, 1, curr_row] = sum_score[0]['rouge-2']['p']
+                sum_scores[1, 2, curr_row] = sum_score[0]['rouge-2']['r']
+                sum_scores[2, 0, curr_row] = sum_score[0]['rouge-l']['f']
+                sum_scores[2, 1, curr_row] = sum_score[0]['rouge-l']['p']
+                sum_scores[2, 2, curr_row] = sum_score[0]['rouge-l']['r']
 
-                ae_sum_scores[0, curr_row] = sum_ae_score[0]['rouge-1']['f']
-                ae_sum_scores[1, curr_row] = sum_ae_score[0]['rouge-1']['p']
-                ae_sum_scores[2, curr_row] = sum_ae_score[0]['rouge-1']['r']
+                ae_sum_scores[0, 0, curr_row] = sum_ae_score[0]['rouge-1']['f']
+                ae_sum_scores[0, 1, curr_row] = sum_ae_score[0]['rouge-1']['p']
+                ae_sum_scores[0, 2, curr_row] = sum_ae_score[0]['rouge-1']['r']
+                ae_sum_scores[1, 0, curr_row] = sum_ae_score[0]['rouge-2']['f']
+                ae_sum_scores[1, 1, curr_row] = sum_ae_score[0]['rouge-2']['p']
+                ae_sum_scores[1, 2, curr_row] = sum_ae_score[0]['rouge-2']['r']
+                ae_sum_scores[2, 0, curr_row] = sum_ae_score[0]['rouge-l']['f']
+                ae_sum_scores[2, 1, curr_row] = sum_ae_score[0]['rouge-l']['p']
+                ae_sum_scores[2, 2, curr_row] = sum_ae_score[0]['rouge-l']['r']
                 curr_row += 1
     
-    sum_scores = sum_scores[:, 0:curr_row]
-    ae_sum_scores = ae_sum_scores[:, 0:curr_row]
+    sum_scores = sum_scores[:, :, 0:curr_row]
+    ae_sum_scores = ae_sum_scores[:, :, 0:curr_row]
     return sum_scores, ae_sum_scores
         
 
 # calculating averages
-def analyze_and_plot_rouge_scores(sum_scores, ae_sum_scores, metric, dataset_name):
+def analyze_and_plot_rouge_scores(sum_scores, ae_sum_scores, metric, dataset_name, summary_len):
     avg_scores = np.mean(sum_scores)
     avg_scores_ae = np.mean(ae_sum_scores)
-    print('avg rouge scores: ', avg_scores)
-    print('avg rouge scores ae: ', avg_scores_ae)
+    print(dataset_name)
+    print('Summary length: ', summary_len)
+    raw_mean = 'Mean ' + metric + ' for raw vectors: ' + str(round(avg_scores, 3))
+    dae_mean = 'Mean ' + metric + ' for DAE vectors: ' + str(round(avg_scores_ae, 3))
+    print(raw_mean)
+    print(dae_mean)
 
-    # print the graphs for the extracted sentences
+    # Add to plot graphs for the extracted sentences
+    """ 
     x = np.arange(len(sum_scores)).tolist()
     label_1 = "Raw " + metric
     label_2 = "AE vector " + metric
@@ -127,6 +144,7 @@ def analyze_and_plot_rouge_scores(sum_scores, ae_sum_scores, metric, dataset_nam
     plt.title(title)
     plt.legend()
     plt.show()
+    """
 
 def evaluate_bc3():
     """
@@ -145,14 +163,23 @@ def evaluate_bc3():
     # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
     # if using df_vectors, the outoencoder should only look at each document, as the features cannot be transloated to other documents!
     corpus_ae = True
-    vector_set = 'df_vectors'                #df_vectors
+    vector_set = 'sentence_vectors'                #df_vectors
     sum_scores, ae_sum_scores = evaluate_rankings(BC3_df_train, BC3_df_test, target, summary_len, corpus_ae, vector_set)
-    # plot F scores:
-    analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'BC3 dataset')
-    # plot precision
-    analyze_and_plot_rouge_scores(sum_scores[1], ae_sum_scores[1], 'precision', 'BC3 dataset')
-    # plot recall
-    analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'BC3 dataset')
+
+    # plot rouge-1 scores:
+    analyze_and_plot_rouge_scores(sum_scores[0][0], ae_sum_scores[0][0], 'rouge-1 f-score', 'BC3 dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[0][1], ae_sum_scores[0][1], 'rouge-1 precision', 'BC3 dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[0][2], ae_sum_scores[0][2], 'rouge-1 recall', 'BC3 dataset', summary_len)
+
+    # plot rouge-2 scores:
+    analyze_and_plot_rouge_scores(sum_scores[1][0], ae_sum_scores[1][0], 'rouge-2 f-score', 'BC3 dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[1][1], ae_sum_scores[1][1], 'rouge-2 precision', 'BC3 dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[1][2], ae_sum_scores[1][2], 'rouge-2 recall', 'BC3 dataset', summary_len)
+
+    # plot rouge-l scores:
+    analyze_and_plot_rouge_scores(sum_scores[2][0], ae_sum_scores[2][0], 'rouge-l f-score', 'BC3 dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[2][1], ae_sum_scores[2][1], 'rouge-l precision', 'BC3 dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[2][2], ae_sum_scores[2][2], 'rouge-l recall', 'BC3 dataset', summary_len)
 
 def evaluate_spotify():
     """
@@ -168,15 +195,23 @@ def evaluate_spotify():
     summary_len = 1
     corpus_ae = True # if false, the autoencoder is only trained on the sentences in the current document
     # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
-    vector_set = 'df_vectors'
+    vector_set = 'sentence_vectors'
 
     sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae, vector_set)
-    # plot F scores:
-    analyze_and_plot_rouge_scores(sum_scores[0], ae_sum_scores[0], 'f-score', 'Spotify dataset')
-    # plot precision
-    analyze_and_plot_rouge_scores(sum_scores[1], ae_sum_scores[1], 'precision', 'Spotify dataset')
-    # plot recall
-    analyze_and_plot_rouge_scores(sum_scores[2], ae_sum_scores[2], 'recall', 'Spotify dataset')
+    # plot rouge-1 scores:
+    analyze_and_plot_rouge_scores(sum_scores[0][0], ae_sum_scores[0][0], 'rouge-1 f-score', 'Spotify dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[0][1], ae_sum_scores[0][1], 'rouge-1 precision', 'Spotify dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[0][2], ae_sum_scores[0][2], 'rouge-1 recall', 'Spotify dataset', summary_len)
+
+    # plot rouge-2 scores:
+    analyze_and_plot_rouge_scores(sum_scores[1][0], ae_sum_scores[1][0], 'rouge-2 f-score', 'Spotify dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[1][1], ae_sum_scores[1][1], 'rouge-2 precision', 'Spotify dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[1][2], ae_sum_scores[1][2], 'rouge-2 recall', 'Spotify dataset', summary_len)
+
+    # plot rouge-l scores:
+    analyze_and_plot_rouge_scores(sum_scores[2][0], ae_sum_scores[2][0], 'rouge-l f-score', 'Spotify dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[2][1], ae_sum_scores[2][1], 'rouge-l precision', 'Spotify dataset', summary_len)
+    analyze_and_plot_rouge_scores(sum_scores[2][2], ae_sum_scores[2][2], 'rouge-l recall', 'Spotify dataset', summary_len)
 
 # evaluate_spotify()
 evaluate_bc3()
