@@ -43,7 +43,7 @@ def stackedRBM(sentences, sentenceloader, train_batch_size):
     current_sentenceloader = sentenceloader
 
     for hidden_dim in [140, 40, 30, 10]:
-        num_epochs = 15 # set to 15 so that we can get a fine-tune parameter search in the autoencoder
+        num_epochs = 10 # set to 15 so that we can get a fine-tune parameter search in the autoencoder
         learning_rate = 1e-3
         use_gaussian = hidden_dim == 10  # Use gaussian distribution on last layer
 
@@ -52,6 +52,7 @@ def stackedRBM(sentences, sentenceloader, train_batch_size):
                   gaussian_hidden_distribution=use_gaussian)
 
         for epoch in range(num_epochs):
+            print(epoch)
             for i, data_list in enumerate(current_sentenceloader):
                 sample_data = data_list
                 v0 = sample_data
@@ -60,7 +61,6 @@ def stackedRBM(sentences, sentenceloader, train_batch_size):
                 _, hk = rbm.sample_h(v0)
                 pvk = rbm.sample_v(hk)
 
-                # Not sure if we should keep momentum coefficient and weigh_decay?
                 rbm.update_weights(v0, pvk, rbm.sample_h(v0)[0], rbm.sample_h(pvk)[0], learning_rate,
                                    momentum_coef=0.5 if epoch < 5 else 0.9,
                                    weight_decay=2e-4,
@@ -114,8 +114,8 @@ def train_DAE(sentence_vectors, batch_size):
     # m = nn.Sigmoid()
     # batch_loss = criterion(m(dae(sentence)),sentence)
 
-    # criterion = nn.MSELoss()                     # mean square loss function
-    criterion = nn.BCELoss()                      # binary cross entropy loss function
+    criterion = nn.MSELoss()                     # mean square loss function
+    #criterion = nn.BCELoss()                      # binary cross entropy loss function
     # The paper uses cross-entropy error as the loss function and
     # mini-batch CG with line search and the Polak-Ribiere rule for search direction.
 
@@ -150,12 +150,12 @@ def train_autoencoder(df, vector_set):
 
     dae, train_loss = train_DAE(sentence_vectors, batch_size)
 
-    plt.figure()
-    plt.plot(train_loss)
-    plt.title('Train Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.show()
+    # plt.figure()
+    # plt.plot(train_loss)
+    # plt.title('Train Loss')
+    # plt.xlabel('Epochs')
+    # plt.ylabel('Loss')
+    # plt.show()
     #plt.savefig('DAE__loss.png')
 
     return dae

@@ -194,8 +194,9 @@ def evaluate_spotify():
     target = 'episode_desc'
     summary_len = 1
     corpus_ae = True # if false, the autoencoder is only trained on the sentences in the current document
-    # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
+    # can set to use the df vectors (t-idf) ('df_vectors') or the glove vectors ('sentence_vectors')
     vector_set = 'sentence_vectors'
+
 
     sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae, vector_set)
     # plot rouge-1 scores:
@@ -213,6 +214,6 @@ def evaluate_spotify():
     analyze_and_plot_rouge_scores(sum_scores[2][1], ae_sum_scores[2][1], 'rouge-l precision', 'Spotify dataset', summary_len)
     analyze_and_plot_rouge_scores(sum_scores[2][2], ae_sum_scores[2][2], 'rouge-l recall', 'Spotify dataset', summary_len)
 
-# evaluate_spotify()
-evaluate_bc3()
+evaluate_spotify()
+#evaluate_bc3()
 
