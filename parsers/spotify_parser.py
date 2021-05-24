@@ -25,7 +25,7 @@ def tokenize_email(text):
 def read_spotify_metadata():
     print('reading metadata..')
     episode_dict = {}
-    with open('./data/spotify/outmeta.json', 'r') as j:
+    with open('../data/spotify/outmeta.json', 'r') as j:
         json_data = json.load(j) 
         for name, data in json_data.items():
             pod_id = name.split(':')[2]
@@ -58,7 +58,7 @@ def read_spotify_transcript_data(episode_dict):
     print('reading files..')
     training_data = []
     test_data = []
-    dir_name = './data/spotify/transformed/'   
+    dir_name = '../data/spotify/transformed/'   
     files = [os.path.join(dir_name, fn) for fn in os.listdir(dir_name)]
     num_files = 0
     num_files_tot = 0
@@ -120,8 +120,8 @@ def write_spotify_data(df_spotify_train, df_spotify_test):
     """ 
     Store data
     """
-    SPOTIFY_PICKLE_TRAIN_LOC  = "./data/dataframes/spotify_df_train.pkl"
-    SPOTIFY_PICKLE_TEST_LOC  = "./data/dataframes/spotify_df_test.pkl"
+    SPOTIFY_PICKLE_TRAIN_LOC  = "../data/dataframes/spotify_df_train.pkl"
+    SPOTIFY_PICKLE_TEST_LOC  = "../data/dataframes/spotify_df_test.pkl"
     df_spotify_train.to_pickle(SPOTIFY_PICKLE_TRAIN_LOC)
     df_spotify_test.to_pickle(SPOTIFY_PICKLE_TEST_LOC)
 

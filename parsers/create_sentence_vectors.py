@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import CountVectorizer # used to extract te
 # https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html#sklearn.feature_extraction.text.TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-BC3_PICKLE_LOC  = "./data/dataframes/wrangled_BC3_df.pkl"
+BC3_PICKLE_LOC  = "../data/dataframes/wrangled_BC3_df.pkl"
 
 """
 Function to determine what words are the most frequent across the document, and use those for the feature vector

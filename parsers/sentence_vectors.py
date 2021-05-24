@@ -11,13 +11,13 @@ from create_sentence_vectors import *
 from sentence_vectors_glove_50d import *
 
 """
-Calls funcitons to create the sentence vectors.
+Calls funcitons to create the sentence vectors for the BC3 dataset.
 Sentence vectors based on term frequency (to be used for the learning part)
 Sentence vectors based on glove (to be used in when comparing sentence similiarity)
 """
 def vectorize():
     # load the parsed data
-    BC3_PICKLE_LOC  = "./data/dataframes/wrangled_BC3_df.pkl"
+    BC3_PICKLE_LOC  = "../data/dataframes/wrangled_BC3_df.pkl"
     BC3_df = pd.read_pickle(BC3_PICKLE_LOC)
 
     # add the glove vectors for sentences
