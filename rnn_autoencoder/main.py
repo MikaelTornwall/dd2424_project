@@ -45,7 +45,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     if use_teacher_forcing:
         for input in range(target_length):
             if attention:
-                decoder_output, decoder_hidden, decoder_attn = decoder(decoder_input, decoder_hidden, encoder_outputs)
+                decoder_output, decoder_hidden, _ = decoder(decoder_input, decoder_hidden, encoder_outputs)
             else:
                 decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             loss += criterion(decoder_output, target_tensor[input])
@@ -53,7 +53,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     else:
         for input in range(target_length):
             if attention:    
-                decoder_output, decoder_hidden, decoder_attn = decoder(decoder_input, decoder_hidden, encoder_outputs)
+                decoder_output, decoder_hidden, _ = decoder(decoder_input, decoder_hidden, encoder_outputs)
             else:
                 decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
             _, topi = decoder_output.topk(1)
@@ -86,7 +86,6 @@ def train_iterations(input_language, output_language, pairs, encoder, decoder, n
 
     training_pairs = [tensors_from_pair(input_language, output_language, random.choice(pairs)) for _ in range(n_iters)]
     
-    # negative log-likelihood loss
     criterion = nn.NLLLoss()
 
     for iteration in range(1, n_iters + 1):
@@ -210,6 +209,11 @@ def main():
 
     print(training_data.info())      
 
+    # results = search_episode(training_data, 'Hello, my name is Kate Cocker. Are you the')
+
+    # for r in results:
+    #     print(r)
+
     config.MAX_LENGTH = len(max(list(training_data['body']), key=len))
     
     clean_body, clean_summary = clean_text(X), clean_text(Y)
@@ -219,31 +223,31 @@ def main():
     idx_train, idx_test = idx[:len(idx) - 15], idx[len(idx) - 15:]
     pairs_train, pairs_test = np.array(pairs)[idx_train], np.array(pairs)[idx_test]
     
+    hidden_sizes = [128, 256, 512]
     hidden_size = 256
-    attention = True
-    n_iterations = 7500
+    attention = False
+    n_iterations = 7000
     lr = 0.01
     
-    if attention:
-        print('Using attention mechanism')
-        encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)        
-        attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)        
-        train_iterations(input_language, output_language, pairs_train, encoder, attn_decoder, n_iterations, print_every=100, plot_every=1000, learning_rate=lr)
-        
-        print('Test data')
-        evaluate_randomly(input_language, output_language, pairs_test, encoder, attn_decoder)                
-        rouge_test, _, len_vs_score = rouge_scores(input_language, output_language, pairs_test, encoder, attn_decoder)
-        print(f'Rouge scores for test data\n{rouge_test}')        
-    else:
-        print('Not using attention mechanism')
-        encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
-        decoder = DecoderRNN(hidden_size, output_language.n_words).to(config.DEVICE)
-        train_iterations(input_language, output_language, pairs_train, encoder, decoder, n_iterations, print_every=100, plot_every=1000, learning_rate=lr, attention=False)
-                
-        print('Test data')
-        evaluate_randomly(input_language, output_language, pairs_test, encoder, decoder, attention=False)                
-        rouge_test, _, len_vs_score = rouge_scores(input_language, output_language, pairs_test, encoder, decoder, attention=False)
-        print(f'Rouge scores for test data\n{rouge_test}')        
+    for hidden_size in hidden_sizes:
+        if attention:
+            print('Using attention mechanism')
+            encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)        
+            attn_decoder = AttnDecoderRNN(hidden_size, output_language.n_words, dropout_p=0.1).to(config.DEVICE)        
+            train_iterations(input_language, output_language, pairs_train, encoder, attn_decoder, n_iterations, print_every=100, plot_every=1000, learning_rate=lr)
+                    
+            evaluate_randomly(input_language, output_language, pairs_test, encoder, attn_decoder)                
+            rouge_test, _, len_vs_score = rouge_scores(input_language, output_language, pairs_test, encoder, attn_decoder)
+            print(f'Rouge scores for test data\n{rouge_test}')        
+        else:
+            print('Not using attention mechanism')
+            encoder = EncoderRNN(input_language.n_words, hidden_size).to(config.DEVICE)
+            decoder = DecoderRNN(hidden_size, output_language.n_words).to(config.DEVICE)
+            train_iterations(input_language, output_language, pairs_train, encoder, decoder, n_iterations, print_every=100, plot_every=1000, learning_rate=lr, attention=False)
+                            
+            evaluate_randomly(input_language, output_language, pairs_test, encoder, decoder, attention=False)                
+            rouge_test, _, len_vs_score = rouge_scores(input_language, output_language, pairs_test, encoder, decoder, attention=False)
+            print(f'Rouge scores for test data\n{rouge_test}')        
 
     scatter_plot(len_vs_score)
 

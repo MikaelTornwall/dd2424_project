@@ -4,10 +4,12 @@ import math
 
 def search_episode(data, search_term, spotify=True):
     results = []
-    for i, row in data.iterrows():
-        if spotify:
-            if search_term in row['episode_desc']:                
+    for i, row in data.iterrows():        
+        if spotify:            
+            # if search_term in row['episode_desc']:                
+            if search_term in row['body']:                
                 results.append(row)
+                
         else:
             if search_term in row['summary']:
                 results.append(row)
