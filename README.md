@@ -1,6 +1,6 @@
 # DD2424 text summarization project
 
-Text summarization project using unsupervised deep learning.
+Text summarization using deep neural networks.
 
 Authors:
 Isak Pettersson
