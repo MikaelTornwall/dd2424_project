@@ -2,6 +2,19 @@ import time
 import math
 
 
+def search_episode(data, search_term, spotify=True):
+    results = []
+    for i, row in data.iterrows():
+        if spotify:
+            if search_term in row['episode_desc']:                
+                results.append(row)
+        else:
+            if search_term in row['summary']:
+                results.append(row)
+
+    return results
+
+
 def as_minutes(s):
     m = math.floor(s / 60)
     s -= m * 60
