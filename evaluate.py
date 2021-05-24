@@ -176,7 +176,7 @@ def evaluate_spotify():
     SPOTIFY_PICKLE_TEST_LOC  = "./final_data/spotify_test_45.pkl" 
     df_train = pd.read_pickle(SPOTIFY_PICKLE_TRAIN_LOC)
     df_test = pd.read_pickle(SPOTIFY_PICKLE_TEST_LOC)
-    
+
     # section to get the summary for a specidic episode
     # df_sent = df_train.loc[df_train['episode_id'] == '7DoDuJE4sCBu2jJlOgCrwA']
     # df_test = df_sent
@@ -184,8 +184,9 @@ def evaluate_spotify():
     target = 'episode_desc'
     summary_len = [1]
     corpus_ae = True # if false, the autoencoder is only trained on the sentences in the current document
-    # can set to use the df vectors ('df_vectors') or the glove vectors ('sentence_vectors')
+    # can set to use the df vectors (t-idf) ('df_vectors') or the glove vectors ('sentence_vectors')
     vector_set = 'sentence_vectors'
+
 
     sum_scores, ae_sum_scores = evaluate_rankings(df_train, df_test, target, summary_len, corpus_ae, vector_set)
     plot_all_scores(sum_scores, ae_sum_scores, 'spotify dataset', summary_len[0])
