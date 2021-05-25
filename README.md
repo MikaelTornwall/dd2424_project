@@ -51,7 +51,8 @@ The pandas dataframe, including the vectors will be written to the file 'BC3_df_
 The functionality for the autoencoder is in the rbm_dae folder. The autoencoder is training on all sentences in the corpus, and can then output sentence vectors based on the grove sentence vectors for a document. The evaluate.py file can be run to test it. 
 
 ## Sequence2Sequence network
-The functionality for the Seq2seq network can be found in the rnn_autoencoder folder. You can run the main.py file there to test it. 
+The functionality for the Seq2seq network can be found in the folder rnn_autoencoder. To train and evaluate the model, use command `python3 main.py` for the BC3 dataset or `python3 main.py True` for the Spotify dataset. 
+
 ## Summarization
 The project includes functionality to summarize documents, based on textrank scores of the sentences in a document. Summarization functionality is located in the file summarize.py
 
